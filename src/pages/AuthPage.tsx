@@ -1,12 +1,20 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { GraduationCap, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Alert } from '../components/ui'
 
+function homeFor(role: string) {
+  if (role === 'admin') return '/admin'
+  if (role === 'agent') return '/agent'
+  return '/student'
+}
+
 export default function AuthPage() {
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const next = params.get('next')
 
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [fullName, setFullName] = useState('')
@@ -25,9 +33,13 @@ export default function AuthPage() {
     setLoading(true)
 
     if (mode === 'login') {
-      const { error } = await signIn(email, password)
+      const { error, profile } = await signIn(email, password)
       if (error) setError(error)
-      else navigate('/', { replace: true })
+      else {
+        const role = profile?.role
+        const redirect = role === 'student' && next ? next : homeFor(role ?? 'student')
+        navigate(redirect, { replace: true })
+      }
     } else {
       if (password.length < 6) {
         setError('Password must be at least 6 characters.')

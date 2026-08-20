@@ -7,7 +7,7 @@ interface AuthState {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>
+  signIn: (email: string, password: string) => Promise<{ error: string | null; profile: Profile | null }>
   signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -22,14 +22,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function fetchProfile(userId: string) {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-    setProfile((data as Profile) ?? null)
+    const profile = (data as Profile) ?? null
+    setProfile(profile)
+    return profile
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    let cancelled = false
+
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+      if (cancelled) return
       setSession(s)
-      if (s?.user) void fetchProfile(s.user.id)
-      setLoading(false)
+      if (s?.user) await fetchProfile(s.user.id)
+      if (!cancelled) setLoading(false)
     })
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
@@ -37,16 +42,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (s?.user) void fetchProfile(s.user.id)
     })
 
-    return () => sub.subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      sub.subscription.unsubscribe()
+    }
   }, [])
 
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { error: error?.message ?? null }
+    if (error) return { error: error?.message ?? null, profile: null }
     // Ensure the profile is loaded before we return, so callers can
     // navigate straight to the role's home without a second render.
-    if (data?.user) await fetchProfile(data.user.id)
-    return { error: null }
+    const profile = data?.user ? await fetchProfile(data.user.id) : null
+    return { error: null, profile }
   }
 
   async function signUp(email: string, password: string, fullName: string, phone: string) {

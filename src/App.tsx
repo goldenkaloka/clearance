@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AppShell, AdminShell } from './components/Layout'
 import AuthPage from './pages/AuthPage'
+import Landing from './pages/Landing'
 import StudentHome from './pages/student/Home'
 import StudentApply from './pages/student/Apply'
 import StudentGown from './pages/student/Gown'
@@ -87,6 +88,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/*" element={<Gate />} />
         </Routes>
