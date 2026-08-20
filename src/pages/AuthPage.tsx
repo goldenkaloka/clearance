@@ -3,12 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { GraduationCap, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Alert } from '../components/ui'
-
-function homeFor(role: string) {
-  if (role === 'admin') return '/admin'
-  if (role === 'agent') return '/agent'
-  return '/student'
-}
+import { homeFor } from '../lib/utils'
 
 export default function AuthPage() {
   const { signIn, signUp } = useAuth()
@@ -37,7 +32,7 @@ export default function AuthPage() {
       if (error) setError(error)
       else {
         const role = profile?.role
-        const redirect = role === 'student' && next ? next : homeFor(role ?? 'student')
+        const redirect = role === 'student' ? (next ?? homeFor('student')) : homeFor(role ?? 'student')
         navigate(redirect, { replace: true })
       }
     } else {

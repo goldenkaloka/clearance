@@ -52,6 +52,16 @@ export function regaliaImage(order: { custom_design_url: string | null; catalog_
   return null
 }
 
+export function dashboardFor(role: string | null | undefined): string {
+  if (role === 'admin') return '/admin'
+  if (role === 'agent') return '/agent'
+  return '/student'
+}
+
+export function homeFor(role: string | null | undefined): string {
+  return role === 'admin' || role === 'agent' ? dashboardFor(role) : '/'
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—'
   const d = new Date(iso)

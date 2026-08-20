@@ -3,16 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, GraduationCap, ImagePlus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { formatTZS, regaliaCategoryLabel, regaliaLabel } from '../lib/utils'
+import { SiteNav } from '../components/Layout'
+import { formatTZS, homeFor, regaliaCategoryLabel, regaliaLabel } from '../lib/utils'
 import type { RegaliaCategory, RegaliaItem } from '../lib/types'
 
 const VALID: RegaliaCategory[] = ['gown', 'sash', 'suit', 'shoes']
-
-function homeFor(role: string) {
-  if (role === 'admin') return '/admin'
-  if (role === 'agent') return '/agent'
-  return '/student'
-}
 
 export default function RegaliaCategoryPage() {
   const { category } = useParams<{ category: string }>()
@@ -47,44 +42,24 @@ export default function RegaliaCategoryPage() {
     else navigate(homeFor(profile.role))
   }
 
-  function goSignIn() {
-    if (profile) navigate(homeFor(profile.role))
-    else navigate('/auth')
-  }
-
   const label = 'text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500'
 
   return (
     <div className="min-h-screen bg-white font-sans text-brand-900">
       {/* top bar */}
-      <header className="sticky top-0 z-50 border-b border-brand-100 bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-3 items-center px-5 py-4 sm:px-8">
-          <nav className="flex items-center gap-6">
+      <SiteNav
+        mode="marketing"
+        left={
+          <>
             <Link to="/" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
               Home
             </Link>
             <span className="hidden text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-900 sm:block">
               {regaliaCategoryLabel(cat)}
             </span>
-          </nav>
-          <div className="flex justify-center">
-            <Link to="/" className="lv-logo text-xl text-brand-900 sm:text-2xl">
-              Clearance&nbsp;Assist
-            </Link>
-          </div>
-          <div className="flex justify-end">
-            {profile ? (
-              <button onClick={goSignIn} className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
-                {profile.full_name?.split(' ')[0] ?? 'Account'}
-              </button>
-            ) : (
-              <button onClick={goSignIn} className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
-                Sign in
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {/* category strip */}
       <section className="border-b border-brand-100 bg-brand-50">

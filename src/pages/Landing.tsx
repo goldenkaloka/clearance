@@ -1,12 +1,8 @@
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, GraduationCap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-
-function homeFor(role: string) {
-  if (role === 'admin') return '/admin'
-  if (role === 'agent') return '/agent'
-  return '/student'
-}
+import { SiteNav } from '../components/Layout'
+import { dashboardFor, homeFor } from '../lib/utils'
 
 const CATEGORIES = [
   { img: '/sash-1.jpg', label: 'Sashes', note: 'Sashes', to: '/regalia/sash' },
@@ -29,8 +25,8 @@ export default function Landing() {
     else navigate(homeFor(profile.role))
   }
 
-  function goSignIn() {
-    if (profile) navigate(homeFor(profile.role))
+  function goAccount() {
+    if (profile) navigate(dashboardFor(profile.role))
     else navigate('/auth')
   }
 
@@ -43,40 +39,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white font-sans text-brand-900">
       {/* top bar */}
-      <header className="sticky top-0 z-50 border-b border-brand-100 bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-3 items-center px-5 py-4 sm:px-8">
-          <nav className="flex items-center gap-6">
-            <a href="#shop" className="hidden text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900 sm:block">
-              Regalia
-            </a>
-            <a href="#services" className="hidden text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900 sm:block">
-              Services
-            </a>
-          </nav>
-          <div className="flex justify-center">
-            <button onClick={goSignIn} className="lv-logo text-xl text-brand-900 sm:text-2xl">
-              Clearance&nbsp;Assist
-            </button>
-          </div>
-          <div className="flex justify-end">
-            {profile ? (
-              <button
-                onClick={goSignIn}
-                className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900"
-              >
-                {profile.full_name?.split(' ')[0] ?? 'Account'}
-              </button>
-            ) : (
-              <button
-                onClick={goSignIn}
-                className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900"
-              >
-                Sign in
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteNav mode="marketing" />
 
       {/* hero */}
       <section className="relative h-[92vh] min-h-[560px] w-full overflow-hidden bg-brand-50">
@@ -247,12 +210,12 @@ export default function Landing() {
                 <p className={label}>Account</p>
                 <ul className="mt-4 space-y-2.5">
                   <li>
-                    <button onClick={goSignIn} className="text-xs text-brand-500 transition-colors hover:text-brand-900">
+                    <button onClick={goAccount} className="text-xs text-brand-500 transition-colors hover:text-brand-900">
                       {profile ? 'My account' : 'Sign in'}
                     </button>
                   </li>
                   <li>
-                    <button onClick={goSignIn} className="text-xs text-brand-500 transition-colors hover:text-brand-900">
+                    <button onClick={goAccount} className="text-xs text-brand-500 transition-colors hover:text-brand-900">
                       {profile ? 'Dashboard' : 'Create account'}
                     </button>
                   </li>
