@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  /* Tokens from louisvuitton.com (light theme)
+     --color-common-accent:#000 | --color-content-intense:#1a1a1a
+     --color-content-subtle:#727272 | --color-surface-extra-light:#fff
+     --color-surface-light:#f8f8f8 | --color-surface-subtle:#e1e1e1
+     --color-border-thin:#e1e1e1 | --color-border-subtle:#b4b4b4
+     --color-border-intense:#929292 | --color-common-highlight:#c87000 */
+  --color-brand-50: #f8f8f8;
+  --color-brand-100: #e1e1e1;
+  --color-brand-200: #b4b4b4;
+  --color-brand-300: #b4b4b4;
+  --color-brand-500: #727272;
+  --color-brand-600: #1a1a1a;
+  --color-brand-700: #000;
+  --color-brand-800: #1a1a1a;
+  --color-brand-900: #000;
+
+  --color-gold-50: #fbf3e5;
+  --color-gold-100: #f6e9d4;
+  --color-gold-200: #e9cf9f;
+  --color-gold-300: #e0a03a;
+  --color-gold-400: #d8851e;
+  --color-gold-500: #c87000;
+  --color-gold-600: #a85f00;
+  --color-gold-700: #8a4f00;
+
+  --font-sans: "Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f8f8f8;
+  color: #1a1a1a;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  letter-spacing: 0.025em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* LV wordmark-style logo block */
+.lv-logo {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* LV "overline" — the only uppercase element, tiny tracking-wide label */
+.lux-label {
+  text-transform: uppercase;
+  letter-spacing: 0.0625rem;
+  font-size: 0.625rem;
+  font-weight: 400;
+}
+
+/* Signature LV link: persistent 1px underline that retracts on hover */
+.link-underline {
+  background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 100% 1px;
+  padding-bottom: 0.125rem;
+  text-underline-offset: 0.25rem;
+  transition: background-size 0.3s cubic-bezier(0.215, 0.61, 0.355, 1), color 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .link-underline:hover {
+    background-size: 0 1px;
+    color: #727272;
+  }
+}
+
+/* Fluid app container: full width on phones, capped on large screens */
+.app-container {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.admin-container {
+  min-height: 100vh;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@media (min-width: 1024px) {
+  .app-container {
+    max-width: 80rem;
+  }
+}
