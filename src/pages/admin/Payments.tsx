@@ -22,7 +22,7 @@ export default function AdminPayments() {
   useEffect(() => {
     supabase
       .from('payments')
-      .select('*, request:clearance_requests(request_number, student_user_id, student:profiles(full_name))')
+      .select('*, request:clearance_requests(request_number, student_user_id, student:profiles!clearance_requests_student_user_id_fkey(full_name))')
       .order('created_at', { ascending: false })
       .limit(100)
       .then(({ data }) => {

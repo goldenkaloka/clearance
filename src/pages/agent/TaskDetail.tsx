@@ -35,7 +35,7 @@ export default function AgentTaskDetail() {
     if (!taskId) return
     const { data } = await supabase
       .from('clearance_tasks')
-      .select('*, stage:clearance_stages(id, name, "order"), request:clearance_requests(request_number, status, priority, service_fee, current_note, student:profiles(full_name, phone))')
+      .select('*, stage:clearance_stages(id, name, "order"), request:clearance_requests(request_number, status, priority, service_fee, current_note, student:profiles!clearance_requests_student_user_id_fkey(full_name, phone))')
       .eq('id', taskId)
       .maybeSingle()
     setTask(data as TaskDetail | null)

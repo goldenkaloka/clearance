@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     supabase.rpc('dashboard_summary').then(({ data }) => setSummary(data as Summary | null))
     supabase
       .from('clearance_requests')
-      .select('*, student:profiles(full_name)')
+      .select('*, student:profiles!clearance_requests_student_user_id_fkey(full_name)')
       .order('created_at', { ascending: false })
       .limit(6)
       .then(({ data }) => setRecent((data ?? []) as ClearanceRequest[]))

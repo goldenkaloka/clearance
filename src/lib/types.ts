@@ -183,6 +183,7 @@ export interface Notification {
   message: string
   type: string
   read: boolean
+  link: string | null
   created_at: string
 }
 

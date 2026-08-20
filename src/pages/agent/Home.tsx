@@ -33,14 +33,14 @@ export default function AgentHome() {
     const load = () => {
       supabase
         .from('clearance_tasks')
-        .select('*, stage:clearance_stages(id, name, "order"), request:clearance_requests(request_number, status, priority, student_user_id, student:profiles(full_name))')
+        .select('*, stage:clearance_stages(id, name, "order"), request:clearance_requests(request_number, status, priority, student_user_id, student:profiles!clearance_requests_student_user_id_fkey(full_name))')
         .eq('agent_id', profile.id)
         .order('updated_at', { ascending: false })
         .then(({ data }) => setTasks((data ?? []) as AgentTask[]))
 
       supabase
         .from('gown_orders')
-        .select('*, student:profiles(student_profiles(*))')
+        .select('*, student:profiles!gown_orders_student_user_id_fkey(student_profiles(*))')
         .eq('agent_id', profile.id)
         .order('updated_at', { ascending: false })
         .then(({ data }) => setGowns((data ?? []) as GownOrder[]))

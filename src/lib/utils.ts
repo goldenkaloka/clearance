@@ -87,6 +87,10 @@ export function timeAgo(iso: string | null | undefined): string {
   return `${days}d ago`
 }
 
+export function isSameLocalDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
 export const statusColor: Record<string, string> = {
   pending: 'bg-slate-100 text-slate-600',
   assigned: 'bg-sky-100 text-sky-700',

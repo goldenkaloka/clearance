@@ -17,7 +17,7 @@ export default function AdminGowns() {
     const [{ data: orders }, { data: agents }] = await Promise.all([
       supabase
         .from('gown_orders')
-        .select('*, student:profiles(student_profiles(*)), agent:profiles!gown_orders_agent_id_fkey(full_name)')
+        .select('*, student:profiles!gown_orders_student_user_id_fkey(student_profiles(*)), agent:profiles!gown_orders_agent_id_fkey(full_name)')
         .order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, full_name').eq('role', 'agent').eq('status', 'active'),
     ])
