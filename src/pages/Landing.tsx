@@ -55,8 +55,8 @@ export default function Landing() {
               Your clearance and regalia — every step tracked, so you only show up and graduate.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <button onClick={() => go('/student/regalia')} className={pill}>
-                Order your regalia <ArrowRight className="h-4 w-4" />
+              <button onClick={() => navigate('/regalia/suit')} className={pill}>
+                Explore regalia <ArrowRight className="h-4 w-4" />
               </button>
               <button onClick={() => go('/student/apply')} className={ghostPill}>
                 Start clearance
@@ -116,11 +116,11 @@ export default function Landing() {
               Complete your regalia
             </h2>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-brand-500">
-              From the gown and sash to the suit and shoes beneath — order everything in one place,
-              sized for you, ready for collection before the ceremony.
+              Browse the gown, sash, suit and shoes on display — call or WhatsApp us and we'll arrange
+              sizes and delivery before the ceremony.
             </p>
-            <button onClick={() => go('/student/regalia')} className={`${pill} mt-8`}>
-              Order regalia <ArrowRight className="h-4 w-4" />
+            <button onClick={() => navigate('/regalia/suit')} className={`${pill} mt-8`}>
+              Browse regalia <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -137,15 +137,23 @@ export default function Landing() {
                 Graduation gown, sash, suit & shoes
               </h2>
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-brand-500">
-                Order your full regalia for male or female students — fitted to your size and ready for
-                collection on campus.
+                Browse the gown, sash, suit and shoes for male or female students — then call or WhatsApp
+                us and we'll fit and prepare your regalia.
               </p>
-              <button
-                onClick={() => go('/student/regalia')}
-                className="mt-8 inline-flex items-center gap-2 border-b border-brand-900 pb-1 text-xs uppercase tracking-[0.2em] text-brand-900 transition-colors hover:border-gold-600 hover:text-gold-600"
-              >
-                Order now <ArrowUpRight className="h-4 w-4" />
-              </button>
+              <div className="mt-8 flex flex-wrap items-center gap-6">
+                <button
+                  onClick={() => navigate('/regalia/suit')}
+                  className="inline-flex items-center gap-2 border-b border-brand-900 pb-1 text-xs uppercase tracking-[0.2em] text-brand-900 transition-colors hover:border-gold-600 hover:text-gold-600"
+                >
+                  Browse samples <ArrowUpRight className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => go('/student/gown')}
+                  className="inline-flex items-center gap-2 border-b border-brand-900 pb-1 text-xs uppercase tracking-[0.2em] text-brand-900 transition-colors hover:border-gold-600 hover:text-gold-600"
+                >
+                  Order a gown <ArrowUpRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
             <div className="bg-white p-10 sm:p-14">
               <p className={label}>02 — Graduation clearance</p>
@@ -174,7 +182,7 @@ export default function Landing() {
             <div className="text-center sm:text-left">
               <div className="flex items-center justify-center gap-2 sm:justify-start">
                 <GraduationCap className="h-5 w-5 text-gold-600" />
-                <span className="lv-logo text-lg text-brand-900">Clearance&nbsp;Assist</span>
+                <span className="lv-logo text-lg text-brand-900">Finalists</span>
               </div>
               <p className="mt-3 max-w-xs text-xs leading-relaxed text-brand-500">
                 Graduation clearance and regalia for Ardhi University students.
@@ -225,7 +233,7 @@ export default function Landing() {
           </div>
           <div className="mt-14 border-t border-brand-100 pt-6 text-center">
             <p className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-300">
-              © {new Date().getFullYear()} Clearance Assist · Ardhi University
+              © {new Date().getFullYear()} Finalists · Ardhi University
             </p>
           </div>
         </div>

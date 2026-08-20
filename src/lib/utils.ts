@@ -46,12 +46,6 @@ export function regaliaCategoryLabel(category: string): string {
   }[category] ?? category
 }
 
-export function regaliaImage(order: { custom_design_url: string | null; catalog_item?: { image_path: string } | null; item_type: string }): string | null {
-  if (order.custom_design_url) return order.custom_design_url
-  if (order.catalog_item?.image_path) return order.catalog_item.image_path
-  return null
-}
-
 export function dashboardFor(role: string | null | undefined): string {
   if (role === 'admin') return '/admin'
   if (role === 'agent') return '/agent'
@@ -60,6 +54,13 @@ export function dashboardFor(role: string | null | undefined): string {
 
 export function homeFor(role: string | null | undefined): string {
   return role === 'admin' || role === 'agent' ? dashboardFor(role) : '/'
+}
+
+export function normalizeWhatsApp(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('0')) return `255${digits.slice(1)}`
+  if (!digits.startsWith('255')) return `255${digits}`
+  return digits
 }
 
 export function formatDate(iso: string | null | undefined): string {

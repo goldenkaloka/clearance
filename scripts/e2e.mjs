@@ -194,7 +194,7 @@ check('student sees gown collected', gownFinal?.status === 'collected', gownFina
 const { data: otherGowns } = await otherStudent.c.from('gown_orders').select('id').eq('id', gownId)
 check('amina cannot see golden gown order', (otherGowns ?? []).length === 0, otherGowns?.length)
 
-console.log('12) REGALIA CATALOG + ORDER (sample, custom, payment, requests)')
+console.log('12) REGALIA CATALOG + CONTACT PHONE (showcase only)')
 const anon = client(null)
 const { data: catalog } = await anon.from('regalia_items').select('*').eq('active', true)
 check('anon can read active catalog items (>=19)', (catalog ?? []).length >= 19, catalog?.length)
@@ -203,58 +203,22 @@ const suit = catalog.find((i) => i.category === 'suit' && i.gender === 'male')
 check('catalog has a sash sample', !!sash, 'no sash')
 check('catalog has a male suit sample', !!suit, 'no suit')
 
-const { data: sashFee } = await anon.rpc('get_item_fee', { p_item_type: 'sash' })
-check('get_item_fee sash = 5000', Number(sashFee) === 5000, sashFee)
-const { data: suitFee } = await anon.rpc('get_item_fee', { p_item_type: 'suit' })
-check('get_item_fee suit = 45000', Number(suitFee) === 45000, suitFee)
-const { data: shoesFee } = await anon.rpc('get_item_fee', { p_item_type: 'shoes' })
-check('get_item_fee shoes = 15000', Number(shoesFee) === 15000, shoesFee)
+const { data: contactPhone } = await anon.rpc('get_contact_phone')
+check('anon can read contact phone', typeof contactPhone === 'string' && contactPhone.trim().length > 0, contactPhone)
 
-const { data: sashOrder, error: sashOrderErr } = await student.c.rpc('order_regalia', {
-  p_item_type: 'sash', p_gender: 'unisex', p_size: 'M', p_ceremony_date: '2026-11-20',
-  p_pickup_location: 'Main Campus', p_catalog_item_id: sash.id, p_custom_name: 'Golden',
-})
-check('order_regalia sample created', !sashOrderErr && sashOrder?.status === 'ordered' && sashOrder.item_type === 'sash', sashOrderErr?.message ?? JSON.stringify(sashOrder))
-check('sample order price = catalog price', Number(sashOrder?.price) === Number(sash.price), `${sashOrder?.price} vs ${sash.price}`)
-check('sample order custom_name stored', sashOrder?.custom_name === 'Golden', sashOrder?.custom_name)
+const { error: setAsStudent } = await student.c.rpc('set_contact_phone', { p_phone: '+255 700 000 222' })
+check('students cannot set contact phone', !!setAsStudent, setAsStudent?.message)
 
-const { data: suitOrder, error: suitOrderErr } = await student.c.rpc('order_regalia', {
-  p_item_type: 'suit', p_gender: 'male', p_size: 'L', p_ceremony_date: '2026-11-20',
-  p_pickup_location: 'Main Campus', p_catalog_item_id: null, p_custom_name: 'John D',
-  p_custom_note: 'navy suit with gold buttons', p_custom_design_url: 'https://example.com/design.jpg',
-})
-check('order_regalia custom created', !suitOrderErr && suitOrder?.status === 'ordered' && suitOrder.item_type === 'suit', suitOrderErr?.message ?? JSON.stringify(suitOrder))
-check('custom order price = default suit fee 45000', Number(suitOrder?.price) === 45000, suitOrder?.price)
-check('custom order design url + note stored', suitOrder?.custom_design_url === 'https://example.com/design.jpg' && suitOrder?.custom_note === 'navy suit with gold buttons', JSON.stringify(suitOrder))
-check('custom order size free text accepted', suitOrder?.size === 'L', suitOrder?.size)
+await admin.c.rpc('set_contact_phone', { p_phone: '+255 700 000 111' })
+const { data: updatedPhone } = await anon.rpc('get_contact_phone')
+check('set_contact_phone updates phone', updatedPhone === '+255 700 000 111', updatedPhone)
+await admin.c.rpc('set_contact_phone', { p_phone: '+255 712 345 678' })
 
-const sashPay = await student.c.functions.invoke('initiate-payment', { body: { gown_order_id: sashOrder.id, phone: '0712345004' } })
-check('regalia initiate-payment sandbox success', sashPay.data?.success === true && sashPay.data?.sandbox === true, sashPay.error?.message ?? JSON.stringify(sashPay.data))
-const sashRef = sashPay.data?.transaction_reference
-const sashWebhook = await student.c.functions.invoke('clickpesa-webhook', {
-  body: { test_key: 'clearance-test-key', transaction_reference: sashRef, status: 'paid' },
-})
-check('regalia webhook accepted', !sashWebhook.error && sashWebhook.data?.status === 'success', sashWebhook.error?.message)
-const { data: sashPaid } = await student.c.from('gown_orders').select('status').eq('id', sashOrder.id).single()
-check('regalia order paid', sashPaid?.status === 'paid', sashPaid?.status)
-const { data: sashPayRow } = await student.c.from('payments').select('kind, status').eq('gown_order_id', sashOrder.id)
-check('regalia payment kind=gown + paid', sashPayRow?.[0]?.kind === 'gown' && sashPayRow?.[0]?.status === 'paid', JSON.stringify(sashPayRow))
+const { error: orderGone } = await student.c.rpc('order_regalia', { p_item_type: 'sash', p_ceremony_date: '2026-11-20' })
+check('order_regalia removed', !!orderGone, orderGone?.message)
 
-const { data: adminProfile } = await admin.c.from('profiles').select('id').eq('role', 'admin').single()
-const { data: adminNotif } = await admin.c.from('notifications').select('title').eq('user_id', adminProfile.id).order('created_at', { ascending: false }).limit(5)
-check('admin notified of new regalia order', adminNotif?.some((n) => n.title === 'New regalia order'), adminNotif?.map((n) => n.title).join(' | '))
-
-const { data: reqSamplesBefore } = await agent.c.from('notifications').select('id').eq('user_id', mary.id).eq('title', 'Sample request')
-const samplesReq = await student.c.rpc('request_regalia_samples', { p_category: 'suit', p_note: 'burgundy double-breasted' })
-check('request_regalia_samples ok', !samplesReq.error, samplesReq.error?.message)
-const { data: reqSamplesAfter } = await agent.c.from('notifications').select('id').eq('user_id', mary.id).eq('title', 'Sample request')
-check('agent got sample request notification', (reqSamplesAfter ?? []).length === (reqSamplesBefore ?? []).length + 1, `${(reqSamplesBefore ?? []).length} -> ${(reqSamplesAfter ?? []).length}`)
-
-const { data: feeBefore } = await anon.rpc('get_item_fee', { p_item_type: 'sash' })
-await admin.c.rpc('set_item_fee', { p_item_type: 'sash', p_fee: 6000 })
-const { data: feeAfter } = await anon.rpc('get_item_fee', { p_item_type: 'sash' })
-check('set_item_fee updates sash fee', Number(feeAfter) === 6000, feeAfter)
-await admin.c.rpc('set_item_fee', { p_item_type: 'sash', p_fee: Number(feeBefore) })
+const { error: feeGone } = await anon.rpc('get_item_fee', { p_item_type: 'sash' })
+check('get_item_fee removed', !!feeGone, feeGone?.message)
 
 console.log(`\nRESULT: ${pass} passed, ${fail} failed`)
 process.exit(fail === 0 ? 0 : 1)

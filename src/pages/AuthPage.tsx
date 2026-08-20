@@ -67,7 +67,7 @@ export default function AuthPage() {
             <GraduationCap className="h-7 w-7 text-gold-600" />
           </div>
           <p className="lux-label text-brand-500">Ardhi University</p>
-          <h1 className="lv-logo mt-2 text-3xl text-brand-900">Clearance&nbsp;Assist</h1>
+          <h1 className="lv-logo mt-2 text-3xl text-brand-900">Finalists</h1>
           <p className="mt-2 text-sm text-brand-500">
             Let us handle your graduation clearance while you track every step.
           </p>

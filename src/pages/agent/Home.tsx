@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import type { ClearanceTask, GownOrder } from '../../lib/types'
 import { Badge, Card, Button, EmptyState, Spinner } from '../../components/ui'
-import { formatDateTime, regaliaLabel } from '../../lib/utils'
+import { formatDateTime } from '../../lib/utils'
 
 interface AgentTask extends ClearanceTask {
   stage?: { id: string; name: string; order: number }
@@ -40,7 +40,7 @@ export default function AgentHome() {
 
       supabase
         .from('gown_orders')
-        .select('*, student:profiles(student_profiles(*)), catalog_item:regalia_items(id, name, image_path)')
+        .select('*, student:profiles(student_profiles(*))')
         .eq('agent_id', profile.id)
         .order('updated_at', { ascending: false })
         .then(({ data }) => setGowns((data ?? []) as GownOrder[]))
@@ -146,31 +146,20 @@ export default function AgentHome() {
           {gownMsg && <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{gownMsg}</div>}
           {gowns.map((g) => (
             <Card key={g.id} className="flex flex-wrap items-center gap-4">
-              {g.custom_design_url || g.catalog_item?.image_path ? (
-                <img src={g.custom_design_url ?? g.catalog_item!.image_path} alt={g.item_type} className="h-16 w-14 rounded-lg object-cover" />
-              ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-500">
-                  <Shirt className="h-5 w-5 text-gold-500" />
-                </div>
-              )}
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-500">
+                <Shirt className="h-5 w-5 text-gold-500" />
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="truncate font-semibold text-brand-900">{g.student?.full_name ?? 'Student'}</p>
                   <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium capitalize text-brand-700">
-                    {regaliaLabel(g.item_type)}
+                    Gown
                   </span>
                   <Badge status={g.status} />
                 </div>
                 <p className="mt-0.5 text-xs text-brand-500">
                   {registration(g)} · Size {g.size} · {g.ceremony_date} · {g.pickup_location}
                 </p>
-                {(g.custom_name || g.custom_note || g.catalog_item?.name) && (
-                  <p className="mt-0.5 text-xs text-brand-400">
-                    {g.catalog_item?.name ?? ''}
-                    {g.custom_name ? ` · "${g.custom_name}"` : ''}
-                    {g.custom_note ? ` — ${g.custom_note}` : ''}
-                  </p>
-                )}
               </div>
               <div className="flex gap-2">
                 {g.status === 'paid' && (

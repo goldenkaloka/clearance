@@ -7,7 +7,6 @@ import RegaliaCategoryPage from './pages/RegaliaCategory'
 import StudentHome from './pages/student/Home'
 import StudentApply from './pages/student/Apply'
 import StudentGown from './pages/student/Gown'
-import StudentRegalia from './pages/student/Regalia'
 import StudentProfile from './pages/student/Profile'
 import AgentHome from './pages/agent/Home'
 import AgentTaskDetail from './pages/agent/TaskDetail'
@@ -30,7 +29,6 @@ function StudentRoutes() {
         <Route path="/student" element={<StudentHome />} />
         <Route path="/student/apply" element={<StudentApply />} />
         <Route path="/student/gown" element={<StudentGown />} />
-        <Route path="/student/regalia" element={<StudentRegalia />} />
         <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="*" element={<Navigate to="/student" replace />} />
       </Routes>

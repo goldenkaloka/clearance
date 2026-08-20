@@ -1,24 +1,21 @@
 import { useEffect, useState } from 'react'
-import { Wallet, Shirt } from 'lucide-react'
+import { Wallet, Phone } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Card, Button, Input, PageHeader, Alert, Spinner } from '../../components/ui'
-import { formatTZS, regaliaLabel, REGALIA_CATEGORIES } from '../../lib/utils'
+import { formatTZS } from '../../lib/utils'
 
 export default function AdminSettings() {
   const [fee, setFee] = useState('')
-  const [itemFees, setItemFees] = useState<Record<string, string>>({})
+  const [contactPhone, setContactPhone] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [savingItem, setSavingItem] = useState<string | null>(null)
+  const [savingPhone, setSavingPhone] = useState(false)
   const [msg, setMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
-    Promise.all([
-      supabase.rpc('get_service_fee'),
-      ...REGALIA_CATEGORIES.map((c) => supabase.rpc('get_item_fee', { p_item_type: c })),
-    ]).then(([service, ...fees]) => {
+    Promise.all([supabase.rpc('get_service_fee'), supabase.rpc('get_contact_phone')]).then(([service, contact]) => {
       setFee(String(Number(service.data) || 0))
-      setItemFees(Object.fromEntries(REGALIA_CATEGORIES.map((c, i) => [c, String(Number(fees[i]?.data) || 0)])))
+      setContactPhone(String(contact.data ?? ''))
       setLoading(false)
     })
   }, [])
@@ -40,19 +37,18 @@ export default function AdminSettings() {
     setSaving(false)
   }
 
-  async function saveItemFee(category: string) {
-    setSavingItem(category)
+  async function savePhone() {
+    setSavingPhone(true)
     setMsg(null)
-    const value = parseFloat(itemFees[category])
-    if (isNaN(value) || value < 0) {
-      setMsg({ kind: 'error', text: 'Enter a valid amount.' })
-      setSavingItem(null)
+    if (!contactPhone.trim()) {
+      setMsg({ kind: 'error', text: 'Enter a contact phone number.' })
+      setSavingPhone(false)
       return
     }
-    const { error } = await supabase.rpc('set_item_fee', { p_item_type: category, p_fee: Math.round(value) })
-    setSavingItem(null)
+    const { error } = await supabase.rpc('set_contact_phone', { p_phone: contactPhone.trim() })
+    setSavingPhone(false)
     if (error) setMsg({ kind: 'error', text: error.message })
-    else setMsg({ kind: 'success', text: `${regaliaLabel(category)} fee updated to ${formatTZS(value)}.` })
+    else setMsg({ kind: 'success', text: 'Contact phone updated. It now shows in the catalog contact popup.' })
   }
 
   return (
@@ -78,32 +74,28 @@ export default function AdminSettings() {
           />
         </div>
         <Button onClick={() => void save()} loading={saving} className="mt-4">Save fee</Button>
-        {msg && <div className="mt-4"><Alert kind={msg.kind}>{msg.text}</Alert></div>}
       </Card>
 
       <Card className="mt-4 max-w-xl">
         <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-          <Shirt className="h-6 w-6" />
+          <Phone className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-bold text-slate-900">Regalia fees</h3>
+        <h3 className="text-base font-bold text-slate-900">Contact phone</h3>
         <p className="mt-1 text-sm text-slate-500">
-          Default price for a custom design in each category. Catalog samples carry their own price, set in the Catalog
-          page.
+          Shown in the popup when a visitor clicks a suit, sash or shoes sample on the public catalog pages, so they can
+          call or WhatsApp you directly.
         </p>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {REGALIA_CATEGORIES.map((c) => (
-            <div key={c} className="flex items-end gap-2">
-              <Input
-                label={`${regaliaLabel(c)} (TZS)`}
-                type="number"
-                min={0}
-                value={itemFees[c] ?? ''}
-                onChange={(e) => setItemFees((m) => ({ ...m, [c]: e.target.value }))}
-              />
-              <Button onClick={() => void saveItemFee(c)} loading={savingItem === c}>Save</Button>
-            </div>
-          ))}
+        <div className="mt-4">
+          <Input
+            label="Phone number"
+            type="tel"
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
+            placeholder="+255 712 345 678"
+          />
         </div>
+        <Button onClick={() => void savePhone()} loading={savingPhone} className="mt-4">Save phone</Button>
+        {msg && <div className="mt-4"><Alert kind={msg.kind}>{msg.text}</Alert></div>}
       </Card>
 
       <Card className="mt-4 max-w-xl bg-slate-50">

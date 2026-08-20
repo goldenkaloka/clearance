@@ -110,7 +110,7 @@ export default function StudentHome() {
               <BadgeCheck className="h-9 w-9 text-gold-400" />
             </div>
             <p className="lux-label text-gold-400">Ardhi University</p>
-            <h2 className="lv-logo mt-2 text-2xl">Graduation Clearance Assistance</h2>
+            <h2 className="lv-logo mt-2 text-2xl">Finalists</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-[#b4b4b4]">
               Submit your details, pay, and let our team handle the clearance offices while you track every step.
             </p>

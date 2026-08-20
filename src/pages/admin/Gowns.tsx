@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { PackageCheck, ShoppingBag, UserRound, Shirt } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Card, Button, PageHeader, Spinner, Alert, Badge, EmptyState } from '../../components/ui'
-import { formatTZS, formatDate, regaliaLabel } from '../../lib/utils'
+import { formatTZS, formatDate } from '../../lib/utils'
 import type { GownOrder, Profile } from '../../lib/types'
 
 export default function AdminGowns() {
@@ -17,7 +17,7 @@ export default function AdminGowns() {
     const [{ data: orders }, { data: agents }] = await Promise.all([
       supabase
         .from('gown_orders')
-        .select('*, student:profiles(student_profiles(*)), agent:profiles!gown_orders_agent_id_fkey(full_name), catalog_item:regalia_items(id, name, image_path)')
+        .select('*, student:profiles(student_profiles(*)), agent:profiles!gown_orders_agent_id_fkey(full_name)')
         .order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, full_name').eq('role', 'agent').eq('status', 'active'),
     ])
@@ -66,31 +66,20 @@ export default function AdminGowns() {
           {orders.map((o) => (
             <Card key={o.id} className="space-y-3">
               <div className="flex flex-wrap items-center gap-4">
-                {o.custom_design_url || o.catalog_item?.image_path ? (
-                  <img src={o.custom_design_url ?? o.catalog_item!.image_path} alt={o.item_type} className="h-16 w-14 rounded-lg object-cover" />
-                ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-500">
-                    <ShoppingBag className="h-5 w-5 text-gold-500" />
-                  </div>
-                )}
+                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-500">
+                  <ShoppingBag className="h-5 w-5 text-gold-500" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="truncate font-semibold text-brand-900">{o.student?.full_name ?? 'Student'}</p>
                     <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium capitalize text-brand-700">
-                      <Shirt className="h-3 w-3" /> {regaliaLabel(o.item_type)}
+                      <Shirt className="h-3 w-3" /> Gown
                     </span>
                     <Badge status={o.status} />
                   </div>
                   <p className="mt-0.5 text-xs text-brand-500">
                     {registration(o) ?? o.student?.phone ?? o.student_user_id} · Size {o.size} · {o.ceremony_date} · {o.pickup_location}
                   </p>
-                  {(o.custom_name || o.custom_note || o.catalog_item?.name) && (
-                    <p className="mt-0.5 text-xs text-brand-400">
-                      {o.catalog_item?.name ?? ''}
-                      {o.custom_name ? ` · "${o.custom_name}"` : ''}
-                      {o.custom_note ? ` — ${o.custom_note}` : ''}
-                    </p>
-                  )}
                   <p className="mt-0.5 flex items-center gap-1 text-xs text-brand-500">
                     <UserRound className="h-3.5 w-3.5" />
                     Agent: {o.agent?.full_name ?? 'Not assigned'}
