@@ -17,7 +17,7 @@ export default function AdminStudents() {
   async function load() {
     const { data } = await supabase
       .from('profiles')
-      .select('*, requests:clearance_requests(id, request_number, status)')
+      .select('*, requests:clearance_requests!clearance_requests_student_user_id_fkey(id, request_number, status)')
       .eq('role', 'student')
       .order('created_at', { ascending: false })
     setStudents((data ?? []) as StudentWithRequests[])
