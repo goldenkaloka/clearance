@@ -1,19 +1,26 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import type { Notification } from '../lib/types'
-import { timeAgo, dashboardFor } from '../lib/utils'
+import { dashboardFor } from '../lib/utils'
 
 export function NotificationsBell() {
   const { profile } = useAuth()
-  const [items, setItems] = useState<Notification[]>([])
-  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
   const [unread, setUnread] = useState(0)
 
   useEffect(() => {
     if (!profile) return
+    const load = () => {
+      supabase
+        .from('notifications')
+        .select('read')
+        .eq('user_id', profile.id)
+        .then(({ data }) => {
+          setUnread(((data ?? []) as { read: boolean }[]).filter((n) => !n.read).length)
+        })
+    }
     load()
 
     const sub = supabase
@@ -26,58 +33,21 @@ export function NotificationsBell() {
     }
   }, [profile])
 
-  const load = () => {
-    if (!profile) return
-    supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', profile.id)
-      .order('created_at', { ascending: false })
-      .limit(20)
-      .then(({ data }) => {
-        setItems((data ?? []) as Notification[])
-        setUnread(((data ?? []) as Notification[]).filter((n) => !n.read).length)
-      })
-  }
-
   if (!profile) return null
 
   return (
-    <div className="relative">
-      <button onClick={() => setOpen((v) => !v)} className="relative rounded-full p-2 text-brand-500 transition-colors hover:bg-brand-50 hover:text-brand-900" title="Notifications">
-        <Bell className="h-4 w-4" />
-        {unread > 0 && (
-          <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-            {unread}
-          </span>
-        )}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30 bg-black/20" onClick={() => setOpen(false)} />
-          <div className="fixed inset-x-3 bottom-0 z-40 rounded-t-2xl border border-brand-100 bg-white p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-3 sm:w-80 sm:max-w-[90vw] sm:rounded-2xl sm:pb-2 sm:shadow-xl">
-            <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-brand-100 sm:hidden" />
-            <p className="px-3 py-2 text-sm font-semibold text-brand-900">Notifications</p>
-            {items.length === 0 && <p className="px-3 py-6 text-center text-sm text-brand-400">No notifications yet</p>}
-            <div className="max-h-[60vh] overflow-y-auto sm:max-h-80">
-              {items.map((n) => (
-                <button
-                  key={n.id}
-                  className="block w-full rounded-xl px-3 py-2 text-left hover:bg-brand-50"
-                  onClick={() => {
-                    supabase.from('notifications').update({ read: true }).eq('id', n.id).then(() => load())
-                  }}
-                >
-                  <p className="text-sm font-medium text-brand-800">{n.title}</p>
-                  <p className="text-xs text-brand-500">{n.message}</p>
-                  <p className="mt-1 text-[10px] text-brand-300">{timeAgo(n.created_at)}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
+    <button
+      onClick={() => navigate('/notifications')}
+      className="relative rounded-full p-2 text-brand-500 transition-colors hover:bg-brand-50 hover:text-brand-900"
+      title="Notifications"
+    >
+      <Bell className="h-4 w-4" />
+      {unread > 0 && (
+        <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+          {unread}
+        </span>
       )}
-    </div>
+    </button>
   )
 }
 
@@ -133,6 +103,7 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
   const mobileLinks: ({ to: string; label: string; anchor?: boolean })[] =
     mode === 'marketing'
       ? [
+          { to: '/', label: 'Home' },
           { to: '#shop', label: 'Regalia', anchor: true },
           { to: '#services', label: 'Services', anchor: true },
           { to: '/regalia/sash', label: 'Sashes' },
@@ -320,6 +291,7 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
 function Shell({ children, nav }: { children: ReactNode; nav: NavItem[] }) {
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   if (!profile) {
     navigate('/auth', { replace: true })
@@ -329,7 +301,7 @@ function Shell({ children, nav }: { children: ReactNode; nav: NavItem[] }) {
   return (
     <div className="min-h-screen bg-white font-sans text-brand-900">
       <SiteNav mode="app" nav={nav} />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10">{children}</main>
+      <main key={location.pathname} className="page-in mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10">{children}</main>
     </div>
   )
 }

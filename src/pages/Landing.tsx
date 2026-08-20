@@ -37,7 +37,7 @@ export default function Landing() {
     'inline-flex items-center gap-2 rounded-full border border-white/80 bg-transparent px-7 py-3 text-xs uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-white hover:text-[#1a1a1a]'
 
   return (
-    <div className="min-h-screen bg-white font-sans text-brand-900">
+    <div className="page-in min-h-screen bg-white font-sans text-brand-900">
       {/* top bar */}
       <SiteNav mode="marketing" />
 

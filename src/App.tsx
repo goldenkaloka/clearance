@@ -8,6 +8,7 @@ import StudentHome from './pages/student/Home'
 import StudentApply from './pages/student/Apply'
 import StudentGown from './pages/student/Gown'
 import StudentProfile from './pages/student/Profile'
+import NotificationsPage from './pages/Notifications'
 import AgentHome from './pages/agent/Home'
 import AgentTaskDetail from './pages/agent/TaskDetail'
 import AgentProfile from './pages/agent/Profile'
@@ -30,6 +31,7 @@ function StudentRoutes() {
         <Route path="/student/apply" element={<StudentApply />} />
         <Route path="/student/gown" element={<StudentGown />} />
         <Route path="/student/profile" element={<StudentProfile />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="*" element={<Navigate to="/student" replace />} />
       </Routes>
     </AppShell>
@@ -43,6 +45,7 @@ function AgentRoutes() {
         <Route path="/agent" element={<AgentHome />} />
         <Route path="/agent/tasks/:taskId" element={<AgentTaskDetail />} />
         <Route path="/agent/profile" element={<AgentProfile />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="*" element={<Navigate to="/agent" replace />} />
       </Routes>
     </AppShell>
@@ -63,6 +66,7 @@ function AdminRoutes() {
         <Route path="/admin/gowns" element={<AdminGowns />} />
         <Route path="/admin/regalia" element={<AdminRegaliaCatalog />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </AdminShell>

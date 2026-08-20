@@ -35,7 +35,7 @@ export default function RegaliaCategoryPage() {
   const label = 'text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500'
 
   return (
-    <div className="min-h-screen bg-white font-sans text-brand-900">
+    <div className="page-in min-h-screen bg-white font-sans text-brand-900">
       {/* top bar */}
       <SiteNav
         mode="marketing"
