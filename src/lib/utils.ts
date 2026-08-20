@@ -26,6 +26,32 @@ export function formatTZS(amount: number | string | null | undefined): string {
   return `TZS ${n.toLocaleString('en-US')}`
 }
 
+export const REGALIA_CATEGORIES = ['gown', 'sash', 'suit', 'shoes'] as const
+
+export function regaliaLabel(category: string): string {
+  return {
+    gown: 'Gown',
+    sash: 'Sash',
+    suit: 'Suit',
+    shoes: 'Shoes',
+  }[category] ?? category
+}
+
+export function regaliaCategoryLabel(category: string): string {
+  return {
+    gown: 'Graduation Gown',
+    sash: 'Sashes',
+    suit: 'Suits',
+    shoes: 'Shoes',
+  }[category] ?? category
+}
+
+export function regaliaImage(order: { custom_design_url: string | null; catalog_item?: { image_path: string } | null; item_type: string }): string | null {
+  if (order.custom_design_url) return order.custom_design_url
+  if (order.catalog_item?.image_path) return order.catalog_item.image_path
+  return null
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—'
   const d = new Date(iso)

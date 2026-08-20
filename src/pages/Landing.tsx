@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, GraduationCap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -9,11 +9,11 @@ function homeFor(role: string) {
 }
 
 const CATEGORIES = [
-  { img: '/sash-1.jpg', label: 'Sashes', note: 'Sashes' },
-  { img: '/suit-male-1.jpg', label: 'Suits — Men', note: 'Male graduates' },
-  { img: '/suit-female-1.jpg', label: 'Suits — Women', note: 'Female graduates' },
-  { img: '/shoe-male-1.jpg', label: 'Shoes — Men', note: 'Male graduates' },
-  { img: '/shoe-female-1.jpg', label: 'Shoes — Women', note: 'Female graduates' },
+  { img: '/sash-1.jpg', label: 'Sashes', note: 'Sashes', to: '/regalia/sash' },
+  { img: '/suit-male-1.jpg', label: 'Suits — Men', note: 'Male graduates', to: '/regalia/suit' },
+  { img: '/suit-female-1.jpg', label: 'Suits — Women', note: 'Female graduates', to: '/regalia/suit' },
+  { img: '/shoe-male-1.jpg', label: 'Shoes — Men', note: 'Male graduates', to: '/regalia/shoes' },
+  { img: '/shoe-female-1.jpg', label: 'Shoes — Women', note: 'Female graduates', to: '/regalia/shoes' },
 ]
 
 export default function Landing() {
@@ -92,8 +92,8 @@ export default function Landing() {
               Your clearance and regalia — every step tracked, so you only show up and graduate.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <button onClick={() => go('/student/gown')} className={pill}>
-                Order your gown <ArrowRight className="h-4 w-4" />
+              <button onClick={() => go('/student/regalia')} className={pill}>
+                Order your regalia <ArrowRight className="h-4 w-4" />
               </button>
               <button onClick={() => go('/student/apply')} className={ghostPill}>
                 Start clearance
@@ -112,9 +112,9 @@ export default function Landing() {
           </div>
           <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
             {CATEGORIES.map((c) => (
-              <button
+              <Link
                 key={c.label}
-                onClick={() => go('/student/gown')}
+                to={c.to}
                 className="group text-left"
               >
                 <div className="overflow-hidden bg-brand-50">
@@ -131,7 +131,7 @@ export default function Landing() {
                   </div>
                   <ArrowUpRight className="h-4 w-4 text-brand-300 transition-colors group-hover:text-gold-600" />
                 </div>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function Landing() {
               From the gown and sash to the suit and shoes beneath — order everything in one place,
               sized for you, ready for collection before the ceremony.
             </p>
-            <button onClick={() => go('/student/gown')} className={`${pill} mt-8`}>
+            <button onClick={() => go('/student/regalia')} className={`${pill} mt-8`}>
               Order regalia <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -178,7 +178,7 @@ export default function Landing() {
                 collection on campus.
               </p>
               <button
-                onClick={() => go('/student/gown')}
+                onClick={() => go('/student/regalia')}
                 className="mt-8 inline-flex items-center gap-2 border-b border-brand-900 pb-1 text-xs uppercase tracking-[0.2em] text-brand-900 transition-colors hover:border-gold-600 hover:text-gold-600"
               >
                 Order now <ArrowUpRight className="h-4 w-4" />
@@ -222,9 +222,19 @@ export default function Landing() {
                 <p className={label}>Services</p>
                 <ul className="mt-4 space-y-2.5">
                   <li>
-                    <button onClick={() => go('/student/gown')} className="text-xs text-brand-500 transition-colors hover:text-brand-900">
-                      Gowns & regalia
-                    </button>
+                    <Link to="/regalia/sash" className="text-xs text-brand-500 transition-colors hover:text-brand-900">
+                      Sashes
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/regalia/suit" className="text-xs text-brand-500 transition-colors hover:text-brand-900">
+                      Suits
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/regalia/shoes" className="text-xs text-brand-500 transition-colors hover:text-brand-900">
+                      Shoes
+                    </Link>
                   </li>
                   <li>
                     <button onClick={() => go('/student/apply')} className="text-xs text-brand-500 transition-colors hover:text-brand-900">

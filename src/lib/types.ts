@@ -124,17 +124,38 @@ export interface Payment {
 
 export type GownSize = 'S' | 'M' | 'L' | 'XL' | 'XXL'
 export type GownStatus = 'ordered' | 'paid' | 'ready_for_pickup' | 'collected' | 'cancelled'
+export type RegaliaCategory = 'gown' | 'sash' | 'suit' | 'shoes'
+export type RegaliaGender = 'male' | 'female' | 'unisex'
+
+export interface RegaliaItem {
+  id: string
+  category: RegaliaCategory
+  name: string
+  description: string | null
+  image_path: string
+  gender: RegaliaGender | null
+  price: number
+  active: boolean
+  sort_order: number
+  created_at: string
+}
 
 export interface GownOrder {
   id: string
   student_user_id: string
   agent_id: string | null
-  size: GownSize
+  item_type: RegaliaCategory
+  gender: RegaliaGender | null
+  size: string
   ceremony_date: string
   pickup_location: string
   status: GownStatus
   price: number
   notes: string | null
+  custom_name: string | null
+  custom_note: string | null
+  catalog_item_id: string | null
+  custom_design_url: string | null
   created_at: string
   updated_at: string
   student?: {
@@ -147,6 +168,11 @@ export interface GownOrder {
   } | null
   agent?: {
     full_name?: string | null
+  } | null
+  catalog_item?: {
+    id: string
+    name: string
+    image_path: string
   } | null
 }
 

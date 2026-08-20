@@ -13,6 +13,7 @@ import {
   UserCircle2,
   Home,
   Shirt,
+  Images,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -102,7 +103,7 @@ interface NavItem {
 const studentNav: NavItem[] = [
   { to: '/student', label: 'Home', icon: Home },
   { to: '/student/apply', label: 'Apply', icon: GraduationCap },
-  { to: '/student/gown', label: 'Gown', icon: Shirt },
+  { to: '/student/regalia', label: 'Regalia', icon: Shirt },
   { to: '/student/profile', label: 'Profile', icon: UserCircle2 },
 ]
 
@@ -118,7 +119,8 @@ const adminNav: NavItem[] = [
   { to: '/admin/students', label: 'Students', icon: GraduationCap },
   { to: '/admin/stages', label: 'Stages', icon: ListChecks },
   { to: '/admin/payments', label: 'Payments', icon: Wallet },
-  { to: '/admin/gowns', label: 'Gowns', icon: Shirt },
+  { to: '/admin/gowns', label: 'Orders', icon: Shirt },
+  { to: '/admin/regalia', label: 'Catalog', icon: Images },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 

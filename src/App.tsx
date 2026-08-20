@@ -3,9 +3,11 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { AppShell, AdminShell } from './components/Layout'
 import AuthPage from './pages/AuthPage'
 import Landing from './pages/Landing'
+import RegaliaCategoryPage from './pages/RegaliaCategory'
 import StudentHome from './pages/student/Home'
 import StudentApply from './pages/student/Apply'
 import StudentGown from './pages/student/Gown'
+import StudentRegalia from './pages/student/Regalia'
 import StudentProfile from './pages/student/Profile'
 import AgentHome from './pages/agent/Home'
 import AgentTaskDetail from './pages/agent/TaskDetail'
@@ -18,6 +20,7 @@ import AdminStudents from './pages/admin/Students'
 import AdminStages from './pages/admin/Stages'
 import AdminPayments from './pages/admin/Payments'
 import AdminGowns from './pages/admin/Gowns'
+import AdminRegaliaCatalog from './pages/admin/RegaliaCatalog'
 import AdminSettings from './pages/admin/Settings'
 
 function StudentRoutes() {
@@ -27,6 +30,7 @@ function StudentRoutes() {
         <Route path="/student" element={<StudentHome />} />
         <Route path="/student/apply" element={<StudentApply />} />
         <Route path="/student/gown" element={<StudentGown />} />
+        <Route path="/student/regalia" element={<StudentRegalia />} />
         <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="*" element={<Navigate to="/student" replace />} />
       </Routes>
@@ -59,6 +63,7 @@ function AdminRoutes() {
         <Route path="/admin/stages" element={<AdminStages />} />
         <Route path="/admin/payments" element={<AdminPayments />} />
         <Route path="/admin/gowns" element={<AdminGowns />} />
+        <Route path="/admin/regalia" element={<AdminRegaliaCatalog />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
@@ -89,6 +94,7 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/regalia/:category" element={<RegaliaCategoryPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/*" element={<Gate />} />
         </Routes>
