@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GraduationCap, Mail, Lock, Phone, ShieldCheck, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
+import { GraduationCap, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Alert } from '../components/ui'
 
@@ -194,15 +194,6 @@ export default function AuthPage() {
               No role selection needed — everyone starts as a student.
             </div>
           )}
-        </div>
-
-        {/* trust note */}
-        <div className="mt-5 flex items-start gap-2 rounded border border-brand-100 bg-white px-4 py-3 text-xs leading-relaxed text-brand-500">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gold-600" />
-          <span>
-            This is a private assistance service, not the official Ardhi University system. Phone OTP login is coming
-            soon — use your email and password for now.
-          </span>
         </div>
       </div>
     </div>

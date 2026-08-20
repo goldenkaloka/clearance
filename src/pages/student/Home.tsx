@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle, ArrowRight, BadgeCheck, CreditCard, Rocket } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -59,6 +59,14 @@ export default function StudentHome() {
   const doneCount = request?.clearance_tasks.filter((t) => t.status === 'completed').length ?? 0
   const totalCount = request?.clearance_tasks.length ?? 0
   const stepIdx = request ? STEP_ORDER[request.status] : 0
+  const evidenceByTask = useMemo(() => {
+    const map: Record<string, Evidence[]> = {}
+    for (const e of evidence) {
+      if (!map[e.task_id]) map[e.task_id] = []
+      map[e.task_id].push(e)
+    }
+    return map
+  }, [evidence])
 
   async function resolveAction() {
     if (!resolving || !file) return
@@ -108,9 +116,6 @@ export default function StudentHome() {
             </p>
           </div>
           <div className="p-6 text-center">
-            <p className="text-xs text-slate-400">
-              This is a private assistance service — not the official Ardhi University system.
-            </p>
             <Link to="/student/apply" className="mt-5 block">
               <Button variant="accent" className="w-full sm:max-w-xs sm:mx-auto">
                 Start clearance <ArrowRight className="h-4 w-4" />
@@ -192,7 +197,7 @@ export default function StudentHome() {
         <div className="space-y-4 lg:col-span-2">
           <Card>
             <SectionHeader title="Clearance stages" subtitle="Where your application is in the process" />
-            <StageTimeline tasks={request.clearance_tasks} />
+            <StageTimeline tasks={request.clearance_tasks} evidenceByTask={evidenceByTask} />
           </Card>
 
           <Card>
