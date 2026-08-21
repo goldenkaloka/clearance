@@ -3,7 +3,7 @@ import { Phone, MessageCircle, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { normalizeWhatsApp } from '../lib/utils'
 
-const DEFAULT_PHONE = '+255 712 345 678'
+const DEFAULT_PHONE = '+255 616622485'
 
 export default function ContactModal({ open, itemName, onClose }: { open: boolean; itemName?: string; onClose: () => void }) {
   const [phone, setPhone] = useState(DEFAULT_PHONE)

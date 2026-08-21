@@ -212,7 +212,7 @@ check('students cannot set contact phone', !!setAsStudent, setAsStudent?.message
 await admin.c.rpc('set_contact_phone', { p_phone: '+255 700 000 111' })
 const { data: updatedPhone } = await anon.rpc('get_contact_phone')
 check('set_contact_phone updates phone', updatedPhone === '+255 700 000 111', updatedPhone)
-await admin.c.rpc('set_contact_phone', { p_phone: '+255 712 345 678' })
+await admin.c.rpc('set_contact_phone', { p_phone: '+255 616622485' })
 
 const { error: orderGone } = await student.c.rpc('order_regalia', { p_item_type: 'sash', p_ceremony_date: '2026-11-20' })
 check('order_regalia removed', !!orderGone, orderGone?.message)

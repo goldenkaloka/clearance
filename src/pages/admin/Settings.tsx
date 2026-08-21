@@ -91,7 +91,7 @@ export default function AdminSettings() {
             type="tel"
             value={contactPhone}
             onChange={(e) => setContactPhone(e.target.value)}
-            placeholder="+255 712 345 678"
+            placeholder="+255 616622485"
           />
         </div>
         <Button onClick={() => void savePhone()} loading={savingPhone} className="mt-4">Save phone</Button>

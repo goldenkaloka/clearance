@@ -126,55 +126,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* services */}
-      <section id="services" className="bg-white">
-        <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 sm:py-32">
-          <p className={label}>Our services</p>
-          <div className="mt-12 grid gap-px border-y border-brand-100 bg-brand-100 sm:grid-cols-2">
-            <div className="bg-white p-10 sm:p-14">
-              <p className={label}>01 — Gowns & regalia</p>
-              <h2 className="mt-5 text-3xl font-normal tracking-[0.02em] sm:text-4xl">
-                Graduation gown, sash, suit & shoes
-              </h2>
-              <p className="mt-4 max-w-sm text-sm leading-relaxed text-brand-500">
-                Browse the gown, sash, suit and shoes for male or female students — then call or WhatsApp
-                us and we'll fit and prepare your regalia.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-6">
-                <button
-                  onClick={() => navigate('/regalia/suit')}
-                  className="inline-flex items-center gap-2 border-b border-brand-900 pb-1 text-xs uppercase tracking-[0.2em] text-brand-900 transition-colors hover:border-gold-600 hover:text-gold-600"
-                >
-                  Browse samples <ArrowUpRight className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => go('/student/gown')}
-                  className="inline-flex items-center gap-2 border-b border-brand-900 pb-1 text-xs uppercase tracking-[0.2em] text-brand-900 transition-colors hover:border-gold-600 hover:text-gold-600"
-                >
-                  Order a gown <ArrowUpRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <div className="bg-white p-10 sm:p-14">
-              <p className={label}>02 — Graduation clearance</p>
-              <h2 className="mt-5 text-3xl font-normal tracking-[0.02em] sm:text-4xl">
-                Clearance, tracked step by step
-              </h2>
-              <p className="mt-4 max-w-sm text-sm leading-relaxed text-brand-500">
-                We handle every department on the ARU clearance form while you follow your progress
-                in real time.
-              </p>
-              <button
-                onClick={() => go('/student/apply')}
-                className="mt-8 inline-flex items-center gap-2 border-b border-brand-900 pb-1 text-xs uppercase tracking-[0.2em] text-brand-900 transition-colors hover:border-gold-600 hover:text-gold-600"
-              >
-                Start clearance <ArrowUpRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* footer */}
       <footer className="border-t border-brand-100 bg-white">
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">

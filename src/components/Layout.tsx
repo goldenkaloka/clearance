@@ -105,7 +105,6 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
       ? [
           { to: '/', label: 'Home' },
           { to: '#shop', label: 'Regalia', anchor: true },
-          { to: '#services', label: 'Services', anchor: true },
           { to: '/regalia/sash', label: 'Sashes' },
           { to: '/regalia/suit', label: 'Suits' },
           { to: '/regalia/shoes', label: 'Shoes' },
