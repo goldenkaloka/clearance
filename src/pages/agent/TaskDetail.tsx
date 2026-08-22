@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Phone, User, Flag } from 'lucide-react'
+import { ArrowLeft, Phone, User, Flag, MessageCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import type { ClearanceTask, Evidence } from '../../lib/types'
 import { Button, Card, Badge, Input, Textarea, Alert, Spinner, SectionHeader } from '../../components/ui'
 import EvidenceList from '../../components/EvidenceList'
-import { formatDate } from '../../lib/utils'
+import { formatDate, normalizeWhatsApp } from '../../lib/utils'
 
 interface TaskDetail extends ClearanceTask {
   stage?: { id: string; name: string; order: number }
@@ -197,6 +197,24 @@ export default function AgentTaskDetail() {
                 <span className="font-medium text-slate-800">{formatDate(task.completed_at)}</span>
               </div>
             </div>
+            {task.request?.student?.phone && (
+              <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
+                <a
+                  href={`tel:${task.request.student.phone}`}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-black px-4 py-2 text-[0.625rem] uppercase tracking-[0.2em] text-white transition-colors hover:bg-brand-700"
+                >
+                  <Phone className="h-3.5 w-3.5" /> Call
+                </a>
+                <a
+                  href={`https://wa.me/${normalizeWhatsApp(task.request.student.phone)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-slate-300 px-4 py-2 text-[0.625rem] uppercase tracking-[0.2em] text-slate-700 transition-colors hover:border-black hover:bg-black hover:text-white"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                </a>
+              </div>
+            )}
           </Card>
 
           {evidence.length > 0 && (

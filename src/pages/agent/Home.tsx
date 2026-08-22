@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Shirt, PackageCheck, CheckCheck } from 'lucide-react'
+import { Shirt, PackageCheck, CheckCheck, Phone } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import type { ClearanceTask, GownOrder } from '../../lib/types'
 import { Badge, Card, Button, EmptyState, Spinner } from '../../components/ui'
-import { formatDateTime } from '../../lib/utils'
+import { formatDateTime, normalizeWhatsApp } from '../../lib/utils'
 
 interface AgentTask extends ClearanceTask {
   stage?: { id: string; name: string; order: number }
@@ -13,7 +13,7 @@ interface AgentTask extends ClearanceTask {
     request_number: string
     status: string
     priority: string
-    student?: { full_name: string }
+    student?: { full_name: string; phone: string | null }
   }
 }
 
@@ -40,7 +40,7 @@ export default function AgentHome() {
 
       supabase
         .from('gown_orders')
-        .select('*, student:profiles!gown_orders_student_user_id_fkey(student_profiles(*))')
+        .select('*, student:profiles!gown_orders_student_user_id_fkey(student_profiles(*), phone)')
         .eq('agent_id', profile.id)
         .order('updated_at', { ascending: false })
         .then(({ data }) => setGowns((data ?? []) as GownOrder[]))
@@ -119,6 +119,11 @@ export default function AgentHome() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-slate-900">{t.request?.student?.full_name ?? 'Student'}</p>
                   <p className="font-mono text-xs text-slate-400">{t.request?.request_number}</p>
+                  {t.request?.student?.phone && (
+                    <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                      <Phone className="h-3 w-3" /> {t.request.student.phone}
+                    </p>
+                  )}
                 </div>
                 <Badge status={t.status} />
               </div>
@@ -161,7 +166,27 @@ export default function AgentHome() {
                   {registration(g)} · Size {g.size} · {g.ceremony_date} · {g.pickup_location}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                {g.student?.phone && (
+                  <>
+                    <a
+                      href={`tel:${g.student.phone}`}
+                      title="Call student"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-black hover:bg-black hover:text-white"
+                    >
+                      <Phone className="h-4 w-4" />
+                    </a>
+                    <a
+                      href={`https://wa.me/${normalizeWhatsApp(g.student.phone)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="WhatsApp student"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-black hover:bg-black hover:text-white"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.87 9.87 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2Zm5.83 14.03c-.24.68-1.4 1.3-1.93 1.35-.52.05-1.01.24-3.4-.71-2.87-1.13-4.7-4.06-4.84-4.25-.14-.19-1.16-1.55-1.16-2.95 0-1.4.73-2.09 1-2.38.26-.29.57-.36.76-.36.19 0 .38 0 .55.01.18.01.41-.07.64.49.24.56.8 1.96.87 2.1.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.17-.3.38-.43.51-.14.14-.29.3-.12.58.16.29.73 1.2 1.57 1.95 1.08.96 1.99 1.26 2.27 1.4.28.14.44.12.61-.07.16-.19.7-.82.89-1.1.19-.29.38-.24.64-.14.26.09 1.65.78 1.93.92.28.14.47.21.54.33.07.12.07.68-.17 1.36Z"/></svg>
+                    </a>
+                  </>
+                )}
                 {g.status === 'paid' && (
                   <Button onClick={() => void gownAction(g, 'ready_for_pickup')} loading={busyGownId === g.id}>
                     <PackageCheck className="h-4 w-4" /> Mark ready
