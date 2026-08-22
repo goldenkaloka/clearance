@@ -1,8 +1,10 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, GraduationCap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { SiteNav } from '../components/Layout'
 import { dashboardFor, homeFor } from '../lib/utils'
+import ContactModal from '../components/ContactModal'
 
 const CATEGORIES = [
   { img: '/sash-1.jpg', label: 'Sashes', note: 'Sashes', to: '/regalia/sash' },
@@ -15,6 +17,7 @@ const CATEGORIES = [
 export default function Landing() {
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const [contactOpen, setContactOpen] = useState(false)
 
   function go(path: string) {
     if (!profile) {
@@ -33,12 +36,9 @@ export default function Landing() {
   const label = 'text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500'
   const pill =
     'inline-flex items-center gap-2 rounded-full border border-black bg-black px-7 py-3 text-xs uppercase tracking-[0.2em] text-[#f8f8f8] transition-all duration-300 hover:bg-white hover:text-[#1a1a1a]'
-  const ghostPill =
-    'inline-flex items-center gap-2 rounded-full border border-white/80 bg-transparent px-7 py-3 text-xs uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-white hover:text-[#1a1a1a]'
 
   return (
     <div className="page-in min-h-screen bg-white font-sans text-brand-900">
-      {/* top bar */}
       <SiteNav mode="marketing" />
 
       {/* hero */}
@@ -55,10 +55,10 @@ export default function Landing() {
               Your clearance and regalia — every step tracked, so you only show up and graduate.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <button onClick={() => navigate('/regalia/suit')} className={pill}>
+              <a href="#shop" className={pill}>
                 Explore regalia <ArrowRight className="h-4 w-4" />
-              </button>
-              <button onClick={() => go('/student/apply')} className={ghostPill}>
+              </a>
+              <button onClick={() => go('/student/apply')} className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-transparent px-7 py-3 text-xs uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-white hover:text-[#1a1a1a]">
                 Start clearance
               </button>
             </div>
@@ -78,7 +78,7 @@ export default function Landing() {
               <Link
                 key={c.label}
                 to={c.to}
-                className="group text-left"
+                className="group"
               >
                 <div className="overflow-hidden bg-brand-50">
                   <img
@@ -119,8 +119,8 @@ export default function Landing() {
               Browse the gown, sash, suit and shoes on display — call or WhatsApp us and we'll arrange
               sizes and delivery before the ceremony.
             </p>
-            <button onClick={() => navigate('/regalia/suit')} className={`${pill} mt-8`}>
-              Browse regalia <ArrowRight className="h-4 w-4" />
+            <button onClick={() => setContactOpen(true)} className={`${pill} mt-8`}>
+              Contact us <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -189,6 +189,8 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   )
 }

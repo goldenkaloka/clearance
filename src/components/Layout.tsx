@@ -128,9 +128,15 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
                 <a href="#shop" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
                   Regalia
                 </a>
-                <a href="#services" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
-                  Services
-                </a>
+                <Link to="/regalia/sash" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
+                  Sashes
+                </Link>
+                <Link to="/regalia/suit" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
+                  Suits
+                </Link>
+                <Link to="/regalia/shoes" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
+                  Shoes
+                </Link>
               </>
             ) : (
               <Link to="/" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
