@@ -38,10 +38,8 @@ export default function StudentApply() {
   const navigate = useNavigate()
 
   const [fee, setFee] = useState<number | null>(null)
-
   const [existingRequest, setExistingRequest] =
     useState<ExistingRequest | null>(null)
-
   const [checkingRequest, setCheckingRequest] = useState(true)
 
   const [regNumber, setRegNumber] = useState('')
@@ -69,16 +67,15 @@ export default function StudentApply() {
   const [notice, setNotice] = useState<string | null>(null)
 
   const [loading, setLoading] = useState(false)
-
   const [sandboxMode, setSandboxMode] = useState(false)
 
   /*
-   * Initial data + existing request.
+   * Load fee, schools, programmes and existing request.
    *
    * IMPORTANT:
-   * payment_pending is NOT a blocking state.
-   * It means the student already created a request and
-   * should be allowed to continue/resume payment.
+   * payment_pending is NOT an active/blocking request.
+   * It means the student already created a request
+   * and should be allowed to resume payment.
    */
   useEffect(() => {
     let mounted = true
@@ -131,7 +128,10 @@ export default function StudentApply() {
       if (!mounted) return
 
       if (error) {
-        console.error('Failed to check existing request:', error)
+        console.error(
+          'Failed to check existing request:',
+          error,
+        )
         setCheckingRequest(false)
         return
       }
@@ -142,16 +142,13 @@ export default function StudentApply() {
         setExistingRequest(request)
 
         /*
-         * Resume payment automatically.
+         * Resume an existing payment-pending request.
          */
         if (request.status === 'payment_pending') {
           setRequestId(request.id)
           setRequestNumber(request.request_number)
           setStage('pay')
 
-          /*
-           * Check whether a payment record already exists.
-           */
           const { data: payment } = await supabase
             .from('payments')
             .select('status')
@@ -193,13 +190,11 @@ export default function StudentApply() {
   }, [profile])
 
   /*
-   * Payment status polling.
+   * Poll payment status.
    *
-   * The frontend should NOT assume that initiating the payment
-   * means the payment succeeded.
-   *
-   * initiate-payment -> pending
-   * ClickPesa webhook -> paid
+   * Initiating the payment does NOT mean it is paid.
+   * The payment becomes successful only after the
+   * backend/webhook changes the payment status to paid.
    */
   useEffect(() => {
     if (!requestId || stage !== 'pay') {
@@ -271,10 +266,8 @@ export default function StudentApply() {
   }
 
   /*
-   * ONLY block a new application when there is a real active
-   * request beyond the payment stage.
-   *
-   * payment_pending is intentionally excluded.
+   * Only block when there is a genuine active request.
+   * payment_pending is intentionally allowed through.
    */
   if (
     existingRequest &&
@@ -305,7 +298,7 @@ export default function StudentApply() {
   }
 
   /*
-   * Create the clearance request.
+   * Create a new clearance request.
    */
   async function submitForm(e: React.FormEvent) {
     e.preventDefault()
@@ -359,11 +352,10 @@ export default function StudentApply() {
   /*
    * Initiate mobile-money payment.
    *
-   * IMPORTANT:
-   * Successful initiation != successful payment.
+   * Successful initiation only means the payment request
+   * was accepted by the payment backend.
    *
-   * The request remains pending until the webhook confirms
-   * the payment.
+   * Actual success comes from the payment webhook.
    */
   async function pay() {
     if (!requestId) {
@@ -408,11 +400,6 @@ export default function StudentApply() {
       return
     }
 
-    /*
-     * At this point ClickPesa should have accepted the
-     * payment initiation, but the money has NOT necessarily
-     * been received yet.
-     */
     setPaymentStatus('pending')
 
     if (
@@ -437,7 +424,7 @@ export default function StudentApply() {
   }
 
   /*
-   * Sandbox-only helper.
+   * Sandbox-only payment confirmation.
    */
   async function confirmSandbox() {
     if (!requestId) return
