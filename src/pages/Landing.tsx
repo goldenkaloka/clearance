@@ -61,6 +61,9 @@ export default function Landing() {
               <button onClick={() => go('/student/apply')} className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-transparent px-7 py-3 text-xs uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-white hover:text-[#1a1a1a]">
                 Start clearance
               </button>
+              <button onClick={() => go('/student/gown')} className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-transparent px-7 py-3 text-xs uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-white hover:text-[#1a1a1a]">
+                Apply for gown
+              </button>
             </div>
           </div>
         </div>
@@ -143,6 +146,11 @@ export default function Landing() {
               <div>
                 <p className={label}>Services</p>
                 <ul className="mt-4 space-y-2.5">
+                  <li>
+                    <button onClick={() => go('/student/gown')} className="text-xs text-brand-500 transition-colors hover:text-brand-900">
+                      Gowns
+                    </button>
+                  </li>
                   <li>
                     <Link to="/regalia/sash" className="text-xs text-brand-500 transition-colors hover:text-brand-900">
                       Sashes

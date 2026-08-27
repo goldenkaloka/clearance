@@ -105,6 +105,7 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
       ? [
           { to: '/', label: 'Home' },
           { to: '#shop', label: 'Regalia', anchor: true },
+          { to: '/student/gown', label: 'Gown' },
           { to: '/regalia/sash', label: 'Sashes' },
           { to: '/regalia/suit', label: 'Suits' },
           { to: '/regalia/shoes', label: 'Shoes' },
@@ -128,6 +129,9 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
                 <a href="#shop" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
                   Regalia
                 </a>
+                <Link to="/student/gown" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
+                  Gown
+                </Link>
                 <Link to="/regalia/sash" className="text-[0.625rem] uppercase tracking-[0.0625rem] text-brand-500 transition-colors hover:text-brand-900">
                   Sashes
                 </Link>
