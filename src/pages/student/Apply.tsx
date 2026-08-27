@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { useToast, extractFunctionsError } from '../../context/ToastContext'
 import {
   Button,
   Input,
@@ -18,8 +19,8 @@ import {
   Spinner,
   SectionHeader,
 } from '../../components/ui'
-import { formatTZS } from '../../lib/utils'
-import type { School, Programme } from '../../lib/types'
+import { formatTZS, normalizeTzPhone, isValidTzPhone } from '../../lib/utils'
+import { useSchools } from '../../hooks/useSchools'
 
 interface ExistingRequest {
   id: string
@@ -46,6 +47,7 @@ type PaymentStatus =
 export default function StudentApply() {
   const { profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
 
   const [fee, setFee] = useState<number | null>(null)
 
@@ -59,9 +61,7 @@ export default function StudentApply() {
   const [schoolId, setSchoolId] = useState('')
   const [programmeId, setProgrammeId] = useState('')
 
-  const [schools, setSchools] = useState<School[]>([])
-  const [programmes, setProgrammes] =
-    useState<Programme[]>([])
+  const { schools, programmes } = useSchools()
 
   const [gradYear, setGradYear] = useState(
     String(new Date().getFullYear()),
@@ -108,8 +108,7 @@ export default function StudentApply() {
   /*
    * Load:
    * - service fee
-   * - schools
-   * - programmes
+   * - student's academic profile (single-source)
    * - student's latest unfinished request
    *
    * payment_pending is NOT considered an active request.
@@ -121,61 +120,28 @@ export default function StudentApply() {
     async function load() {
       setCheckingRequest(true)
 
-      const [
-        feeResult,
-        schoolsResult,
-        programmesResult,
-      ] = await Promise.all([
-        supabase.rpc('get_service_fee'),
-
-        supabase
-          .from('schools')
-          .select('*')
-          .order('order'),
-
-        supabase
-          .from('programmes')
-          .select('*')
-          .order('order'),
-      ])
+      const feeResult = await supabase.rpc('get_service_fee')
 
       if (!mounted) return
 
       if (feeResult.error) {
-        console.error(
-          'Failed to load service fee:',
-          feeResult.error,
-        )
+        console.error('Failed to load service fee:', feeResult.error)
       } else if (feeResult.data != null) {
         setFee(Number(feeResult.data))
       }
 
-      if (schoolsResult.error) {
-        console.error(
-          'Failed to load schools:',
-          schoolsResult.error,
-        )
-      }
-
-      if (programmesResult.error) {
-        console.error(
-          'Failed to load programmes:',
-          programmesResult.error,
-        )
-      }
-
-      setSchools(
-        (schoolsResult.data ?? []) as School[],
-      )
-
-      setProgrammes(
-        (programmesResult.data ??
-          []) as Programme[],
-      )
-
       if (!profile) {
         setCheckingRequest(false)
         return
+      }
+
+      // single-source: prefill academic fields from student_profiles so Apply doesn't re-ask
+      const { data: sp } = await supabase.from('student_profiles').select('*').eq('user_id', profile.id).maybeSingle()
+      if (mounted && sp) {
+        if (sp.registration_number) setRegNumber(sp.registration_number)
+        if (sp.school_id) setSchoolId(sp.school_id)
+        if (sp.programme_id) setProgrammeId(sp.programme_id)
+        if (sp.graduation_year) setGradYear(String(sp.graduation_year))
       }
 
       const { data, error } = await supabase
@@ -541,35 +507,8 @@ export default function StudentApply() {
    *     -> 255712345678
    *
    * 255712345678
-   *     -> 255712345678
+   *     -> 255712345678 (now centralized in lib/utils: normalizeTzPhone)
    */
-  function normalizePhone(
-    value: string,
-  ) {
-    let phone =
-      value.replace(
-        /[\s-]/g,
-        '',
-      )
-
-    if (
-      phone.startsWith('+')
-    ) {
-      phone =
-        phone.substring(1)
-    }
-
-    if (
-      phone.startsWith('0') &&
-      phone.length === 10
-    ) {
-      phone =
-        '255' +
-        phone.substring(1)
-    }
-
-    return phone
-  }
 
   /*
    * Initiate mobile-money payment.
@@ -582,11 +521,11 @@ export default function StudentApply() {
    * A pending payment does NOT prevent
    * another initiation attempt.
    */
-  async function pay() {
+   async function pay() {
     if (!requestId) {
-      setError(
-        'No clearance request is available for payment.',
-      )
+      const msg = 'No clearance request is available for payment.'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
@@ -594,29 +533,18 @@ export default function StudentApply() {
       payPhone.trim()
 
     if (!rawPhone) {
-      setError(
-        'Please enter the phone number you want to use for payment.',
-      )
+      const msg = 'Please enter the phone number you want to use for payment.'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
-    const phone =
-      normalizePhone(
-        rawPhone,
-      )
+    const phone = normalizeTzPhone(rawPhone)
 
-    /*
-     * Basic Tanzania mobile number
-     * validation.
-     */
-    if (
-      !/^255\d{9}$/.test(
-        phone,
-      )
-    ) {
-      setError(
-        'Enter a valid Tanzania mobile number, for example 0712 345 678.',
-      )
+    if (!isValidTzPhone(phone)) {
+      const msg = 'Enter a valid Tanzania mobile number, for example 0712 345 678.'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
@@ -646,20 +574,27 @@ export default function StudentApply() {
           },
         )
 
-      if (
-        error ||
-        !data?.success
-      ) {
-        setPaymentStatus(
-          'failed',
-        )
-
-        setError(
+      if (error) {
+        const extracted = await extractFunctionsError(error)
+        const msg =
+          extracted ??
           data?.error ??
-            error?.message ??
-            'Payment could not be initiated.',
-        )
+          'Payment could not be initiated.'
+        const friendly =
+          msg === 'Edge Function returned a non-2xx status code'
+            ? 'Payment could not be initiated. Try again.'
+            : msg
+        setPaymentStatus('failed')
+        setError(friendly)
+        toast.error(friendly)
+        return
+      }
 
+      if (!data?.success) {
+        const msg = data?.error ?? 'Payment could not be initiated.'
+        setPaymentStatus('failed')
+        setError(msg)
+        toast.error(msg)
         return
       }
 
@@ -668,26 +603,24 @@ export default function StudentApply() {
        *
        * This DOES NOT mean payment succeeded.
        */
-      setPaymentStatus(
-        'pending',
-      )
+      setPaymentStatus('pending')
 
       if (
         data.sandbox &&
         data.transaction_reference
       ) {
         setSandboxMode(true)
-
-        setNotice(
-          'Sandbox payment request created. Use the sandbox confirmation button below to simulate payment completion.',
-        )
+        const m =
+          'Sandbox payment request created. Use the sandbox confirmation button below to simulate payment completion.'
+        setNotice(m)
+        toast.success(m)
       } else {
         setSandboxMode(false)
-
-        setNotice(
+        const m =
           data.message ??
-            'Payment request sent. Check your phone and enter your mobile-money PIN.',
-        )
+          'Payment request sent. Check your phone and enter your mobile-money PIN.'
+        setNotice(m)
+        toast.success(m)
       }
     } catch (err) {
       console.error(
@@ -695,15 +628,13 @@ export default function StudentApply() {
         err,
       )
 
-      setPaymentStatus(
-        'failed',
-      )
-
-      setError(
+      const msg =
         err instanceof Error
           ? err.message
-          : 'Payment could not be initiated.',
-      )
+          : 'Payment could not be initiated.'
+      setPaymentStatus('failed')
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -743,9 +674,8 @@ export default function StudentApply() {
         .limit(1)
 
       if (error) {
-        setError(
-          error.message,
-        )
+        setError(error.message)
+        toast.error(error.message)
         return
       }
 
@@ -754,9 +684,9 @@ export default function StudentApply() {
           ?.transaction_reference
 
       if (!reference) {
-        setError(
-          'No pending payment found. Try initiating the payment again.',
-        )
+        const msg = 'No pending payment found. Try initiating the payment again.'
+        setError(msg)
+        toast.error(msg)
         return
       }
 
@@ -777,19 +707,18 @@ export default function StudentApply() {
         )
 
       if (webhookError) {
-        setError(
-          webhookError.message,
-        )
+        const msg =
+          (await extractFunctionsError(webhookError)) ??
+          webhookError.message
+        setError(msg)
+        toast.error(msg)
         return
       }
 
-      setPaymentStatus(
-        'paid',
-      )
-
-      setNotice(
-        'Payment confirmed! Your request is now active.',
-      )
+      setPaymentStatus('paid')
+      const msg = 'Payment confirmed! Your request is now active.'
+      setNotice(msg)
+      toast.success(msg)
 
       window.setTimeout(
         () => {
@@ -805,11 +734,12 @@ export default function StudentApply() {
         err,
       )
 
-      setError(
+      const msg =
         err instanceof Error
           ? err.message
-          : 'Could not confirm sandbox payment.',
-      )
+          : 'Could not confirm sandbox payment.'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -1068,8 +998,7 @@ export default function StudentApply() {
                   variant="accent"
                   className="w-full sm:w-auto"
                 >
-                  Continue to payment
-                  <FileText className="h-4 w-4" />
+                  Continue to payment <FileText className="h-4 w-4" />
                 </Button>
               </form>
             </Card>

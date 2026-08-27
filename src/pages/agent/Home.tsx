@@ -5,7 +5,9 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import type { ClearanceTask, GownOrder } from '../../lib/types'
 import { Badge, Card, Button, EmptyState, Spinner } from '../../components/ui'
-import { formatDateTime, normalizeWhatsApp } from '../../lib/utils'
+import { normalizeWhatsApp } from '../../lib/utils'
+import { formatDateTime } from '../../lib/utils'
+import { useGownStatus } from '../../hooks/useGownStatus'
 
 interface AgentTask extends ClearanceTask {
   stage?: { id: string; name: string; order: number }
@@ -25,8 +27,16 @@ export default function AgentHome() {
   const [gowns, setGowns] = useState<GownOrder[]>([])
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('all')
   const [loading, setLoading] = useState(true)
-  const [busyGownId, setBusyGownId] = useState<string | null>(null)
-  const [gownMsg, setGownMsg] = useState<string | null>(null)
+  const { busyId: busyGownId, updateStatus } = useGownStatus(() => {
+    // reload gowns after status change
+    if (!profile) return
+    supabase
+      .from('gown_orders')
+      .select('*, student:profiles!gown_orders_student_user_id_fkey(student_profiles(*), phone)')
+      .eq('agent_id', profile.id)
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => setGowns((data ?? []) as GownOrder[]))
+  })
 
   useEffect(() => {
     if (!profile) return
@@ -60,12 +70,7 @@ export default function AgentHome() {
   }, [profile])
 
   async function gownAction(order: GownOrder, status: GownOrder['status']) {
-    setGownMsg(null)
-    setBusyGownId(order.id)
-    const fn = status === 'ready_for_pickup' ? 'mark_gown_ready' : 'mark_gown_collected'
-    const { error } = await supabase.rpc(fn, { p_order_id: order.id })
-    setBusyGownId(null)
-    if (error) setGownMsg(error.message)
+    await updateStatus(order.id, status as 'ready_for_pickup' | 'collected')
   }
 
   if (loading) return <Spinner />
@@ -148,7 +153,6 @@ export default function AgentHome() {
             <h2 className="text-lg font-bold text-slate-900">Gown orders</h2>
             <Badge status={gownsToHandle.length > 0 ? 'paid' : 'collected'} />
           </div>
-          {gownMsg && <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{gownMsg}</div>}
           {gowns.map((g) => (
             <Card key={g.id} className="flex flex-wrap items-center gap-4">
               <div className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-500">

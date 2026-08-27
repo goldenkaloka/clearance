@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { PackageCheck, ShoppingBag, UserRound, Shirt } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { Card, Button, PageHeader, Spinner, Alert, Badge, EmptyState } from '../../components/ui'
+import { Card, Button, PageHeader, Spinner, Badge, EmptyState } from '../../components/ui'
 import { formatTZS, formatDate } from '../../lib/utils'
+import { useGownStatus } from '../../hooks/useGownStatus'
 import type { GownOrder, Profile } from '../../lib/types'
 
 export default function AdminGowns() {
@@ -10,8 +11,6 @@ export default function AdminGowns() {
   const [agents, setAgents] = useState<Profile[]>([])
   const [assignedTo, setAssignedTo] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
-  const [msg, setMsg] = useState<string | null>(null)
-  const [busyId, setBusyId] = useState<string | null>(null)
 
   async function load() {
     const [{ data: orders }, { data: agents }] = await Promise.all([
@@ -26,6 +25,8 @@ export default function AdminGowns() {
     setLoading(false)
   }
 
+  const { busyId, updateStatus, assignAgent } = useGownStatus(load)
+
   useEffect(() => {
     void load()
   }, [])
@@ -33,22 +34,11 @@ export default function AdminGowns() {
   async function assign(order: GownOrder) {
     const agentId = assignedTo[order.id]
     if (!agentId) return
-    setMsg(null)
-    setBusyId(order.id)
-    const { error } = await supabase.rpc('assign_gown_agent', { p_order_id: order.id, p_agent_id: agentId })
-    setBusyId(null)
-    if (error) setMsg(error.message)
-    else await load()
+    await assignAgent(order.id, agentId)
   }
 
   async function setStatus(order: GownOrder, status: GownOrder['status']) {
-    setMsg(null)
-    setBusyId(order.id)
-    const fn = status === 'ready_for_pickup' ? 'mark_gown_ready' : 'mark_gown_collected'
-    const { error } = await supabase.rpc(fn, { p_order_id: order.id })
-    setBusyId(null)
-    if (error) setMsg(error.message)
-    else await load()
+    await updateStatus(order.id, status as 'ready_for_pickup' | 'collected')
   }
 
   if (loading) return <Spinner />
@@ -58,7 +48,6 @@ export default function AdminGowns() {
   return (
     <div>
       <PageHeader title="Graduation gowns" subtitle="Track gown orders, assign agents and manage pickup" />
-      {msg && <div className="mb-4"><Alert kind="error">{msg}</Alert></div>}
       {orders.length === 0 ? (
         <EmptyState title="No gown orders yet" message="Orders will appear here once students request gowns." />
       ) : (

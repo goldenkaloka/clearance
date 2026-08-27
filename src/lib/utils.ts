@@ -56,11 +56,21 @@ export function homeFor(role: string | null | undefined): string {
   return role === 'admin' || role === 'agent' ? dashboardFor(role) : '/'
 }
 
-export function normalizeWhatsApp(phone: string): string {
-  const digits = phone.replace(/\D/g, '')
+export function normalizeTzPhone(phone: string): string {
+  let p = phone.replace(/[\s-]/g, '')
+  if (p.startsWith('+')) p = p.slice(1)
+  const digits = p.replace(/\D/g, '')
+  if (digits.startsWith('0') && digits.length === 10) return `255${digits.slice(1)}`
   if (digits.startsWith('0')) return `255${digits.slice(1)}`
   if (!digits.startsWith('255')) return `255${digits}`
   return digits
+}
+
+// keep old name as alias for existing callers
+export const normalizeWhatsApp = normalizeTzPhone
+
+export function isValidTzPhone(phone: string): boolean {
+  return /^255\d{9}$/.test(normalizeTzPhone(phone))
 }
 
 export function formatDate(iso: string | null | undefined): string {

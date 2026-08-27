@@ -17,16 +17,21 @@ export default function AdminAgents() {
   async function load() {
     const { data } = await supabase.from('profiles').select('*').eq('role', 'agent')
     const rows = (data ?? []) as AgentWithStats[]
-    const stats = await Promise.all(
-      rows.map(async (a) => {
-        const [active, completed] = await Promise.all([
-          supabase.from('clearance_tasks').select('id', { count: 'exact' }).eq('agent_id', a.id).not('status', 'eq', 'completed'),
-          supabase.from('clearance_tasks').select('id', { count: 'exact' }).eq('agent_id', a.id).eq('status', 'completed'),
-        ])
-        return { active_tasks: active.count ?? 0, completed_tasks: completed.count ?? 0 }
-      }),
-    )
-    setAgents(rows.map((r, i) => ({ ...r, ...stats[i] })))
+    if (rows.length === 0) {
+      setAgents([])
+      setLoading(false)
+      return
+    }
+    const ids = rows.map((r) => r.id)
+    const { data: tasks } = await supabase.from('clearance_tasks').select('agent_id, status').in('agent_id', ids)
+    const counts = new Map<string, { active: number; completed: number }>()
+    for (const t of (tasks ?? []) as { agent_id: string; status: string }[]) {
+      const c = counts.get(t.agent_id) ?? { active: 0, completed: 0 }
+      if (t.status === 'completed') c.completed++
+      else c.active++
+      counts.set(t.agent_id, c)
+    }
+    setAgents(rows.map((r) => ({ ...r, active_tasks: counts.get(r.id)?.active ?? 0, completed_tasks: counts.get(r.id)?.completed ?? 0 })))
     setLoading(false)
   }
 

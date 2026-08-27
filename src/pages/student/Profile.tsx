@@ -2,20 +2,22 @@ import { useEffect, useState } from 'react'
 import { Mail, Phone, User } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import type { StudentProfile, School, Programme } from '../../lib/types'
+import type { StudentProfile } from '../../lib/types'
+import { useSchools } from '../../hooks/useSchools'
+import { useToast } from '../../context/ToastContext'
 import { Card, Button, Input, Select, Alert, SectionHeader } from '../../components/ui'
 import { Spinner } from '../../components/ui'
 
 export default function StudentProfile() {
   const { profile, refreshProfile } = useAuth()
+  const { schools, programmes } = useSchools()
+  const toast = useToast()
   const [loaded, setLoaded] = useState(false)
   const [fullName, setFullName] = useState(profile?.full_name ?? '')
   const [phone, setPhone] = useState(profile?.phone ?? '')
   const [regNumber, setRegNumber] = useState('')
   const [schoolId, setSchoolId] = useState('')
   const [programmeId, setProgrammeId] = useState('')
-  const [schools, setSchools] = useState<School[]>([])
-  const [programmes, setProgrammes] = useState<Programme[]>([])
   const [gradYear, setGradYear] = useState('')
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
@@ -24,16 +26,6 @@ export default function StudentProfile() {
     if (!profile) return
     setFullName(profile.full_name)
     setPhone(profile.phone ?? '')
-    supabase
-      .from('schools')
-      .select('*')
-      .order('order')
-      .then(({ data }) => setSchools((data ?? []) as School[]))
-    supabase
-      .from('programmes')
-      .select('*')
-      .order('order')
-      .then(({ data }) => setProgrammes((data ?? []) as Programme[]))
     supabase
       .from('student_profiles')
       .select('*')
@@ -56,7 +48,9 @@ export default function StudentProfile() {
     setMsg(null)
     const { error: pErr } = await supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', profile!.id)
     if (pErr) {
-      setMsg(pErr.message)
+      const m = pErr.message
+      setMsg(m)
+      toast.error(m)
       setSaving(false)
       return
     }
@@ -68,12 +62,16 @@ export default function StudentProfile() {
       p_programme_id: programmeId || null,
     })
     if (sErr) {
-      setMsg(sErr.message)
+      const m = sErr.message
+      setMsg(m)
+      toast.error(m)
       setSaving(false)
       return
     }
     await refreshProfile()
-    setMsg('Saved successfully.')
+    const m = 'Saved successfully.'
+    setMsg(m)
+    toast.success(m)
     setSaving(false)
   }
 

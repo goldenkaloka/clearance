@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
 import { AppShell, AdminShell } from './components/Layout'
 import AuthPage from './pages/AuthPage'
 import Landing from './pages/Landing'
@@ -93,14 +94,16 @@ function Gate() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/regalia/:category" element={<RegaliaCategoryPage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/*" element={<Gate />} />
-        </Routes>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/regalia/:category" element={<RegaliaCategoryPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/*" element={<Gate />} />
+          </Routes>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   )
 }

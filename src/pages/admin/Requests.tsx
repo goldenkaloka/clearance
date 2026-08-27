@@ -73,15 +73,16 @@ export default function ClearanceRequests() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input className="pl-9" placeholder="Search by name, request ID…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select
+        <Select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm outline-none focus:border-gold-500 md:w-auto"
+          className="w-full md:w-auto"
+          aria-label="Filter by status"
         >
           {STATUSES.map((s) => (
             <option key={s} value={s}>{s === 'all' ? 'All statuses' : requestStatusLabel[s as keyof typeof requestStatusLabel] ?? s}</option>
           ))}
-        </select>
+        </Select>
         <Select
           value={schoolFilter}
           onChange={(e) => setSchoolFilter(e.target.value)}

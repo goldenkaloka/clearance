@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { Shirt, CreditCard, MapPin, CalendarDays, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { useToast, extractFunctionsError } from '../../context/ToastContext'
 import { Button, Input, Select, Card, Alert, Spinner, SectionHeader, Badge, PageHeader } from '../../components/ui'
-import { formatTZS } from '../../lib/utils'
+import { formatTZS, normalizeTzPhone, isValidTzPhone } from '../../lib/utils'
 import type { GownOrder, GownSize } from '../../lib/types'
 
 interface InitiateResult {
@@ -21,6 +22,7 @@ const LOCATIONS = ['Main Campus', 'Masani Campus', 'Zanzibar Campus']
 
 export default function StudentGown() {
   const { profile } = useAuth()
+  const toast = useToast()
 
   const [fee, setFee] = useState<number | null>(null)
   const [order, setOrder] = useState<GownOrder | null>(null)
@@ -61,7 +63,9 @@ export default function StudentGown() {
       p_pickup_location: pickupLocation,
     })
     if (error || !data) {
-      setError(error?.message ?? 'Could not place the gown order')
+      const msg = error?.message ?? 'Could not place the gown order'
+      setError(msg)
+      toast.error(msg)
       setBusy(false)
       return
     }
@@ -71,22 +75,51 @@ export default function StudentGown() {
 
   async function pay() {
     if (!order) return
+    const raw = payPhone.trim()
+    if (!raw) {
+      const msg = 'Enter the phone number to receive the mobile-money prompt.'
+      setError(msg)
+      toast.error(msg)
+      return
+    }
+    const phone = normalizeTzPhone(raw)
+    if (!isValidTzPhone(phone)) {
+      const msg = 'Enter a valid Tanzania mobile number, for example 0712 345 678.'
+      setError(msg)
+      toast.error(msg)
+      return
+    }
     setError(null)
     setNotice(null)
     setBusy(true)
     const { data, error } = await supabase.functions.invoke<InitiateResult>('initiate-payment', {
-      body: { gown_order_id: order.id, phone: payPhone },
+      body: { gown_order_id: order.id, phone },
     })
-    if (error || !data?.success) {
-      setError(data?.error ?? error?.message ?? 'Payment could not be initiated')
+    if (error) {
+      const extracted = await extractFunctionsError(error)
+      const msg = extracted ?? data?.error ?? 'Payment could not be initiated.'
+      const friendly = msg === 'Edge Function returned a non-2xx status code' ? 'Payment could not be initiated. Try again.' : msg
+      setError(friendly)
+      toast.error(friendly)
+      setBusy(false)
+      return
+    }
+    if (!data?.success) {
+      const msg = data?.error ?? 'Payment could not be initiated.'
+      setError(msg)
+      toast.error(msg)
       setBusy(false)
       return
     }
     if (data.sandbox && data.transaction_reference) {
       setSandboxMode(true)
-      setNotice('Sandbox mode: simulate the gateway confirming your payment below.')
+      const m = 'Sandbox mode: simulate the gateway confirming your payment below.'
+      setNotice(m)
+      toast.success(m)
     } else {
-      setNotice(data.message ?? 'Payment request sent to your phone. Complete it on your device.')
+      const m = data.message ?? 'Payment request sent to your phone. Complete it on your device.'
+      setNotice(m)
+      toast.success(m)
     }
     setBusy(false)
   }
@@ -98,7 +131,9 @@ export default function StudentGown() {
     const { data: p } = await supabase.from('payments').select('transaction_reference').eq('gown_order_id', order.id).limit(1)
     const ref = p?.[0]?.transaction_reference
     if (!ref) {
-      setError('No pending payment found. Try initiating the payment again.')
+      const msg = 'No pending payment found. Try initiating the payment again.'
+      setError(msg)
+      toast.error(msg)
       setBusy(false)
       return
     }
@@ -106,11 +141,15 @@ export default function StudentGown() {
       body: { test_key: 'clearance-test-key', transaction_reference: ref, status: 'paid' },
     })
     if (webhookErr) {
-      setError(webhookErr.message)
+      const msg = (await extractFunctionsError(webhookErr)) ?? webhookErr.message
+      setError(msg)
+      toast.error(msg)
       setBusy(false)
       return
     }
-    setNotice('Gown payment confirmed! We will prepare your gown for pickup.')
+    const m = 'Gown payment confirmed! We will prepare your gown for pickup.'
+    setNotice(m)
+    toast.success(m)
     setBusy(false)
     await load()
   }
@@ -232,9 +271,10 @@ export default function StudentGown() {
                 <option key={l} value={l}>{l}</option>
               ))}
             </Select>
+            <Input label="Payment phone (M-Pesa / Tigo Pesa)" type="tel" value={payPhone} onChange={(e) => setPayPhone(e.target.value)} placeholder="07XX XXX XXX" hint="Prompt will be sent here immediately after ordering" />
             <div className="flex items-end">
               <Button onClick={() => void placeOrder()} loading={busy} variant="accent" className="w-full" disabled={!ceremonyDate}>
-                Order gown <Shirt className="h-4 w-4" />
+                Order & pay <Shirt className="h-4 w-4" />
               </Button>
             </div>
           </div>
