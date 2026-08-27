@@ -223,16 +223,16 @@ export default function StudentGown() {
       {error && <Alert kind="error">{error}</Alert>}
       {notice && <Alert kind={notice.includes('confirmed') || notice.includes('submitted') ? 'success' : 'info'}>{notice}</Alert>}
 
-      <Card className="!border-0 bg-black text-[#f8f8f8]">
+      <Card className="bg-white border-brand-100">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Shirt className="h-6 w-6 text-gold-400" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white"><Shirt className="h-5 w-5" /></span>
             <div>
-              <h3 className="lux-label text-gold-400">Service fee</h3>
-              <p className="text-2xl font-extrabold">{fee ? formatTZS(fee) : '…'}</p>
+              <h3 className="lux-label text-brand-500">Service fee</h3>
+              <p className="text-2xl font-extrabold text-black">{fee ? formatTZS(fee) : '…'}</p>
             </div>
           </div>
-          <p className="max-w-xs text-xs leading-relaxed text-[#b4b4b4]">
+          <p className="max-w-xs text-xs leading-relaxed text-brand-500">
             ARU control-number payment gives you the gown. Our TZS 10,000 fee is paid here after uploading the PDF receipt.
           </p>
         </div>

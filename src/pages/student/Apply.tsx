@@ -1274,22 +1274,22 @@ export default function StudentApply() {
 
         {/* SIDEBAR */}
         <div className="space-y-4">
-          <Card className="!border-0 bg-black text-[#f8f8f8]">
+          <Card className="bg-white border-brand-100">
             <div className="mb-2 flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-gold-400" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white"><Wallet className="h-5 w-5" /></span>
 
-              <h3 className="lux-label text-gold-400">
+              <h3 className="lux-label text-brand-500">
                 Fee summary
               </h3>
             </div>
 
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-xs text-[#b4b4b4]">
+                <p className="text-xs text-brand-500">
                   Service fee
                 </p>
 
-                <p className="text-2xl font-extrabold">
+                <p className="text-2xl font-extrabold text-black">
                   {fee
                     ? formatTZS(
                         fee,
@@ -1299,7 +1299,7 @@ export default function StudentApply() {
               </div>
             </div>
 
-            <p className="mt-3 text-xs leading-relaxed text-[#b4b4b4]">
+            <p className="mt-3 text-xs leading-relaxed text-brand-500">
               One-time fee for the
               full clearance assistance,
               paid once by mobile money.
