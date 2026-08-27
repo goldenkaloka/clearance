@@ -58,6 +58,7 @@ export interface ClearanceRequest {
   service_fee: number
   status: RequestStatus
   assigned_agent_id: string | null
+  passport_photo_url: string | null
   priority: 'normal' | 'high'
   current_note: string | null
   created_at: string
@@ -122,7 +123,7 @@ export interface Payment {
   created_at: string
 }
 
-export type GownSize = 'S' | 'M' | 'L' | 'XL' | 'XXL'
+export type GownSize = 'small' | 'medium' | 'large'
 export type GownStatus = 'ordered' | 'paid' | 'ready_for_pickup' | 'collected' | 'cancelled'
 export type RegaliaCategory = 'gown' | 'sash' | 'suit' | 'shoes'
 export type RegaliaGender = 'male' | 'female' | 'unisex'
@@ -151,6 +152,7 @@ export interface GownOrder {
   pickup_location: string
   status: GownStatus
   price: number
+  receipt_url: string | null
   notes: string | null
   custom_name: string | null
   custom_note: string | null

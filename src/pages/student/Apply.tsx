@@ -71,6 +71,10 @@ export default function StudentApply() {
     profile?.phone ?? '',
   )
 
+  const [passportFile, setPassportFile] = useState<File | null>(null)
+  const [passportUrl, setPassportUrl] = useState<string | null>(null)
+  const [uploadingPassport, setUploadingPassport] = useState(false)
+
   const [stage, setStage] = useState<'form' | 'pay'>(
     'form',
   )
@@ -425,6 +429,36 @@ export default function StudentApply() {
   /*
    * Create clearance request.
    */
+  async function uploadPassportNow(file: File): Promise<string | null> {
+    if (!file.type.startsWith('image/')) {
+      const m = 'Passport photo must be an image (JPG/PNG).'
+      setError(m)
+      toast.error(m)
+      return null
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      const m = 'Image too large. Max 5MB.'
+      setError(m)
+      toast.error(m)
+      return null
+    }
+    setUploadingPassport(true)
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const path = `${profile!.id}/passport-${Date.now()}-${safe}`
+    const { error: upErr } = await supabase.storage.from('student-documents').upload(path, file, { contentType: file.type, upsert: true })
+    if (upErr) {
+      const m = `Upload failed: ${upErr.message}`
+      setError(m)
+      toast.error(m)
+      setUploadingPassport(false)
+      return null
+    }
+    const { data: urlData } = supabase.storage.from('student-documents').getPublicUrl(path)
+    setPassportUrl(urlData.publicUrl)
+    setUploadingPassport(false)
+    return urlData.publicUrl
+  }
+
   async function submitForm(
     e: React.FormEvent,
   ) {
@@ -432,6 +466,20 @@ export default function StudentApply() {
 
     setError(null)
     setNotice(null)
+
+    // ensure passport
+    let url = passportUrl
+    if (passportFile && !url) {
+      url = await uploadPassportNow(passportFile)
+      if (!url) return
+    }
+    if (!url) {
+      const m = 'Passport size photo is required.'
+      setError(m)
+      toast.error(m)
+      return
+    }
+
     setLoading(true)
 
     const {
@@ -451,6 +499,7 @@ export default function StudentApply() {
             gradYear,
             10,
           ),
+        p_passport_photo_url: url,
       },
     )
 
@@ -990,15 +1039,43 @@ export default function StudentApply() {
                   required
                 />
 
+                <div>
+                  <label className="mb-1.5 block text-sm font-normal text-brand-800">Passport size photo *</label>
+                  {passportUrl ? (
+                    <div className="flex items-center gap-4 rounded border border-emerald-200 bg-emerald-50 p-3">
+                      <img src={passportUrl} alt="Passport preview" className="h-16 w-16 rounded object-cover" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-emerald-700">Photo uploaded</p>
+                        <button type="button" onClick={() => { setPassportUrl(null); setPassportFile(null) }} className="text-xs text-brand-600 underline">Change</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className={`flex cursor-pointer items-center gap-3 rounded border px-3 py-3 text-sm ${uploadingPassport ? 'border-brand-200 bg-brand-50' : 'border-brand-200 bg-white hover:border-brand-900'}`}>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-brand-600">📷</span>
+                      <span className="flex-1 truncate">{passportFile ? passportFile.name : 'Choose JPG/PNG, max 5MB'}</span>
+                      <input type="file" accept="image/jpeg,image/png,image/jpg" className="hidden" onChange={async (e) => {
+                        const f = e.target.files?.[0]
+                        if (f) {
+                          setPassportFile(f)
+                          setError(null)
+                          await uploadPassportNow(f)
+                        }
+                        e.target.value = ''
+                      }} />
+                    </label>
+                  )}
+                  <p className="mt-1 text-xs text-brand-400">Required — agent will download and attach to physical form</p>
+                </div>
+
                 <Button
                   type="submit"
                   loading={
-                    loading
+                    loading || uploadingPassport
                   }
                   variant="accent"
                   className="w-full sm:w-auto"
                 >
-                  Continue to payment <FileText className="h-4 w-4" />
+                  Continue to payment{fee ? ` — ${formatTZS(fee)}` : ''} <FileText className="h-4 w-4" />
                 </Button>
               </form>
             </Card>
@@ -1007,8 +1084,12 @@ export default function StudentApply() {
             <Card>
               <SectionHeader
                 title="Mobile money payment"
-                subtitle="Pay securely via M-Pesa, Tigo Pesa or Airtel Money"
+                subtitle={`Pay ${fee ? formatTZS(fee) : ''} securely via M-Pesa, Tigo Pesa or Airtel Money`}
               />
+              <div className="mb-4 flex items-center justify-between rounded-xl bg-brand-50 px-4 py-3 text-sm">
+                <span className="flex items-center gap-2 font-medium text-brand-700"><Wallet className="h-4 w-4" /> Service fee</span>
+                <span className="text-lg font-extrabold text-brand-900">{fee ? formatTZS(fee) : '…'}</span>
+              </div>
 
               {error && (
                 <div className="mb-4">

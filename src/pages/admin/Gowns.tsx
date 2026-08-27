@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PackageCheck, ShoppingBag, UserRound, Shirt } from 'lucide-react'
+import { PackageCheck, ShoppingBag, UserRound, Shirt, FileText } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Card, Button, PageHeader, Spinner, Badge, EmptyState } from '../../components/ui'
 import { formatTZS, formatDate } from '../../lib/utils'
@@ -69,6 +69,11 @@ export default function AdminGowns() {
                   <p className="mt-0.5 text-xs text-brand-500">
                     {registration(o) ?? o.student?.phone ?? o.student_user_id} · Size {o.size} · {o.ceremony_date} · {o.pickup_location}
                   </p>
+                  {o.receipt_url && (
+                    <a href={o.receipt_url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-700 underline">
+                      <FileText className="h-3.5 w-3.5" /> View PDF receipt
+                    </a>
+                  )}
                   <p className="mt-0.5 flex items-center gap-1 text-xs text-brand-500">
                     <UserRound className="h-3.5 w-3.5" />
                     Agent: {o.agent?.full_name ?? 'Not assigned'}
@@ -80,7 +85,7 @@ export default function AdminGowns() {
                 </div>
               </div>
 
-              {(o.status === 'paid' || o.status === 'ready_for_pickup') && (
+              {(o.status === 'ordered' || o.status === 'paid' || o.status === 'ready_for_pickup') && (
                 <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
                   <select
                     value={assignedTo[o.id] ?? o.agent_id ?? ''}
@@ -95,6 +100,11 @@ export default function AdminGowns() {
                   <Button onClick={() => void assign(o)} loading={busyId === o.id} disabled={!assignedTo[o.id] && !o.agent_id} variant="accent">
                     Assign
                   </Button>
+                  {o.status === 'ordered' && (
+                    <Button onClick={async () => { const { error } = await supabase.from('gown_orders').update({ status: 'paid' }).eq('id', o.id); if (!error) await load() }} loading={busyId === o.id} variant="success">
+                      Verify receipt
+                    </Button>
+                  )}
                   {o.status === 'paid' && (
                     <Button onClick={() => void setStatus(o, 'ready_for_pickup')} loading={busyId === o.id}>
                       <PackageCheck className="h-4 w-4" /> Mark ready

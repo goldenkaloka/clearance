@@ -15,6 +15,7 @@ interface TaskDetail extends ClearanceTask {
     status: string
     priority: string
     service_fee: number
+    passport_photo_url: string | null
     current_note: string | null
     student?: { full_name: string; phone: string | null }
   }
@@ -35,7 +36,7 @@ export default function AgentTaskDetail() {
     if (!taskId) return
     const { data } = await supabase
       .from('clearance_tasks')
-      .select('*, stage:clearance_stages(id, name, "order"), request:clearance_requests(request_number, status, priority, service_fee, current_note, student:profiles!clearance_requests_student_user_id_fkey(full_name, phone))')
+      .select('*, stage:clearance_stages(id, name, "order"), request:clearance_requests(request_number, status, priority, service_fee, passport_photo_url, current_note, student:profiles!clearance_requests_student_user_id_fkey(full_name, phone))')
       .eq('id', taskId)
       .maybeSingle()
     setTask(data as TaskDetail | null)
@@ -216,6 +217,22 @@ export default function AgentTaskDetail() {
               </div>
             )}
           </Card>
+
+          {task.request?.passport_photo_url && (
+            <Card>
+              <SectionHeader title="Passport photo" subtitle="Download to attach to physical form" />
+              <img src={task.request.passport_photo_url} alt="Passport" className="mx-auto h-56 w-44 rounded-lg border border-brand-100 object-cover" />
+              <a
+                href={task.request.passport_photo_url}
+                download
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-black px-5 py-2.5 text-xs uppercase tracking-[0.2em] text-white transition-colors hover:bg-brand-800"
+              >
+                Download image
+              </a>
+            </Card>
+          )}
 
           {evidence.length > 0 && (
             <Card>

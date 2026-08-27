@@ -131,6 +131,14 @@ export default function AdminRequestDetail() {
             </div>
           </Card>
 
+          {request.passport_photo_url && (
+            <Card>
+              <SectionHeader title="Passport photo" subtitle="Uploaded by student" />
+              <img src={request.passport_photo_url} alt="Passport" className="h-56 w-44 rounded-lg border border-brand-100 object-cover" />
+              <a href={request.passport_photo_url} download target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs uppercase tracking-[0.2em] text-white">Download image</a>
+            </Card>
+          )}
+
           <Card>
             <SectionHeader title="Stages" />
             <StageTimeline tasks={request.clearance_tasks} />
