@@ -271,10 +271,9 @@ export default function StudentGown() {
                 <option key={l} value={l}>{l}</option>
               ))}
             </Select>
-            <Input label="Payment phone (M-Pesa / Tigo Pesa)" type="tel" value={payPhone} onChange={(e) => setPayPhone(e.target.value)} placeholder="07XX XXX XXX" hint="Prompt will be sent here immediately after ordering" />
             <div className="flex items-end">
               <Button onClick={() => void placeOrder()} loading={busy} variant="accent" className="w-full" disabled={!ceremonyDate}>
-                Order & pay <Shirt className="h-4 w-4" />
+                Order gown <Shirt className="h-4 w-4" />
               </Button>
             </div>
           </div>
