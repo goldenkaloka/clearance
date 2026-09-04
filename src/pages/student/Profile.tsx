@@ -7,6 +7,7 @@ import { useSchools } from '../../hooks/useSchools'
 import { useToast } from '../../context/ToastContext'
 import { Card, Button, Input, Select, Alert, SectionHeader } from '../../components/ui'
 import { Spinner } from '../../components/ui'
+import { friendlyDbError } from '../../lib/utils'
 
 export default function StudentProfile() {
   const { profile, refreshProfile } = useAuth()
@@ -48,7 +49,7 @@ export default function StudentProfile() {
     setMsg(null)
     const { error: pErr } = await supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', profile!.id)
     if (pErr) {
-      const m = pErr.message
+      const m = friendlyDbError(pErr, 'Could not save your profile.')
       setMsg(m)
       toast.error(m)
       setSaving(false)
@@ -62,7 +63,7 @@ export default function StudentProfile() {
       p_programme_id: programmeId || null,
     })
     if (sErr) {
-      const m = sErr.message
+      const m = friendlyDbError(sErr, 'Could not save your academic details.')
       setMsg(m)
       toast.error(m)
       setSaving(false)

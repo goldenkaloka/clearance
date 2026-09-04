@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { useToast, extractFunctionsError } from '../../context/ToastContext'
 import { Button, Input, Select, Card, Alert, Spinner, SectionHeader, Badge, PageHeader } from '../../components/ui'
-import { formatTZS, normalizeTzPhone, isValidTzPhone } from '../../lib/utils'
+import { formatTZS, normalizeTzPhone, isValidTzPhone, friendlyDbError, friendlyPaymentError } from '../../lib/utils'
 import type { GownOrder, GownSize } from '../../lib/types'
 
 interface InitiateResult {
@@ -117,7 +117,7 @@ export default function StudentGown() {
       p_receipt_url: url,
     })
     if (error || !data) {
-      const msg = error?.message ?? 'Could not place the gown order'
+      const msg = error ? friendlyDbError(error, 'Could not place the gown order') : 'Could not place the gown order'
       setError(msg)
       toast.error(msg)
       setBusy(false)
@@ -154,15 +154,14 @@ export default function StudentGown() {
     })
     if (error) {
       const extracted = await extractFunctionsError(error)
-      const msg = extracted ?? data?.error ?? 'Payment could not be initiated.'
-      const friendly = msg === 'Edge Function returned a non-2xx status code' ? 'Payment could not be initiated. Try again.' : msg
+      const friendly = friendlyPaymentError(extracted ?? data?.error, 'Payment could not be initiated. Try again.')
       setError(friendly)
       toast.error(friendly)
       setBusy(false)
       return
     }
     if (!data?.success) {
-      const msg = data?.error ?? 'Payment could not be initiated.'
+      const msg = friendlyPaymentError(data?.error, 'Payment could not be initiated.')
       setError(msg)
       toast.error(msg)
       setBusy(false)

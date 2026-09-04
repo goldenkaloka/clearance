@@ -19,7 +19,7 @@ import {
   Spinner,
   SectionHeader,
 } from '../../components/ui'
-import { formatTZS, normalizeTzPhone, isValidTzPhone } from '../../lib/utils'
+import { formatTZS, normalizeTzPhone, isValidTzPhone, friendlyDbError, friendlyPaymentError } from '../../lib/utils'
 import { useSchools } from '../../hooks/useSchools'
 
 interface ExistingRequest {
@@ -504,10 +504,11 @@ export default function StudentApply() {
     )
 
     if (error || !data) {
-      setError(
-        error?.message ??
-          'Could not create clearance request.',
-      )
+      const msg = error
+        ? friendlyDbError(error, 'Could not create clearance request.')
+        : 'Could not create clearance request.'
+      setError(msg)
+      toast.error(msg)
 
       setLoading(false)
       return
@@ -625,14 +626,10 @@ export default function StudentApply() {
 
       if (error) {
         const extracted = await extractFunctionsError(error)
-        const msg =
-          extracted ??
-          data?.error ??
-          'Payment could not be initiated.'
-        const friendly =
-          msg === 'Edge Function returned a non-2xx status code'
-            ? 'Payment could not be initiated. Try again.'
-            : msg
+        const friendly = friendlyPaymentError(
+          extracted ?? data?.error,
+          'Payment could not be initiated. Try again.',
+        )
         setPaymentStatus('failed')
         setError(friendly)
         toast.error(friendly)
@@ -640,7 +637,7 @@ export default function StudentApply() {
       }
 
       if (!data?.success) {
-        const msg = data?.error ?? 'Payment could not be initiated.'
+        const msg = friendlyPaymentError(data?.error, 'Payment could not be initiated.')
         setPaymentStatus('failed')
         setError(msg)
         toast.error(msg)
@@ -677,10 +674,10 @@ export default function StudentApply() {
         err,
       )
 
-      const msg =
-        err instanceof Error
-          ? err.message
-          : 'Payment could not be initiated.'
+      const msg = friendlyPaymentError(
+        err instanceof Error ? err.message : '',
+        'Payment could not be initiated.',
+      )
       setPaymentStatus('failed')
       setError(msg)
       toast.error(msg)
