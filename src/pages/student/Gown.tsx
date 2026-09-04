@@ -291,6 +291,11 @@ export default function StudentGown() {
             <span className="text-brand-600">Size {order!.size} gown + receipt verified</span>
             <span className="font-bold text-brand-900">{formatTZS(order!.price)}</span>
           </div>
+          <div className="mb-4">
+            <Alert kind="warning">
+              Make sure you have at least {formatTZS(order!.price + 2500)} in your wallet — your network adds its own service and government charges on top of the {formatTZS(order!.price)} fee.
+            </Alert>
+          </div>
           {order!.receipt_url && (
             <a href={order!.receipt_url} target="_blank" rel="noreferrer" className="mb-4 inline-flex items-center gap-1 text-sm text-brand-600 underline">
               <FileText className="h-4 w-4" /> View uploaded receipt

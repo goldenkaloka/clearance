@@ -1090,6 +1090,13 @@ export default function StudentApply() {
                 <span className="flex items-center gap-2 font-medium text-brand-700"><Wallet className="h-4 w-4" /> Service fee</span>
                 <span className="text-lg font-extrabold text-brand-900">{fee ? formatTZS(fee) : '…'}</span>
               </div>
+              {fee !== null && (
+                <div className="mb-4">
+                  <Alert kind="warning">
+                    Make sure you have at least {formatTZS(fee + 2500)} in your wallet — your network adds its own service and government charges on top of the {formatTZS(fee)} fee.
+                  </Alert>
+                </div>
+              )}
 
               {error && (
                 <div className="mb-4">
