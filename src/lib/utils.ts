@@ -207,6 +207,10 @@ export function friendlyPaymentError(message: unknown, fallback = 'Payment could
 
   if (!text || text === 'edge function returned a non-2xx status code') return fallback
 
+  if (text.includes('failed to send a request to the edge function') || text.includes('failed to fetch') || text.includes('networkerror') || text.includes('network request failed') || text.includes('load failed')) {
+    return 'Could not reach our servers. Check your internet connection and try again.'
+  }
+
   if (text.includes('insufficient') && (text.includes('fund') || text.includes('balance'))) {
     return 'Your mobile-money balance is too low — it must cover the fee plus network and government charges. Top up and try again.'
   }
