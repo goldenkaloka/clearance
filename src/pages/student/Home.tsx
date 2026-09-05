@@ -55,6 +55,36 @@ export default function StudentHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile])
 
+  useEffect(() => {
+    if (!payment || (payment.status !== 'pending' && payment.status !== 'processing')) return
+    const paymentId = payment.id
+    let active = true
+    let attempts = 0
+    async function sync() {
+      if (!active) return
+      const { data } = await supabase.functions.invoke<{ status?: string }>('payment-status', {
+        body: { payment_id: paymentId },
+      })
+      if (!active) return
+      if (data?.status === 'paid' || data?.status === 'failed') {
+        await load()
+      }
+    }
+    const interval = window.setInterval(() => {
+      attempts += 1
+      if (attempts >= 40) {
+        window.clearInterval(interval)
+        return
+      }
+      void sync()
+    }, 4000)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payment?.id, payment?.status])
+
   const actionTask = request?.clearance_tasks.find((t) => t.status === 'action_required')
   const doneCount = request?.clearance_tasks.filter((t) => t.status === 'completed').length ?? 0
   const totalCount = request?.clearance_tasks.length ?? 0
