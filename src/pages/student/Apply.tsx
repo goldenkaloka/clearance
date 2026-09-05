@@ -310,7 +310,7 @@ export default function StudentApply() {
         error,
       } = await supabase
         .from('payments')
-        .select('status')
+        .select('id, status')
         .eq(
           'request_id',
           requestId,
@@ -347,9 +347,49 @@ export default function StudentApply() {
           break
 
         case 'pending':
-        case 'processing':
           setPaymentStatus('pending')
           break
+
+        case 'processing': {
+          setPaymentStatus('pending')
+
+          /*
+           * A payment that is 'processing' has been pushed
+           * to ClickPesa. The provider does not reliably
+           * deliver its webhook, so reconcile directly with
+           * ClickPesa's query API instead of waiting forever.
+           */
+          const {
+            data: sync,
+          } = await supabase.functions.invoke<{
+            status?: string
+          }>('payment-status', {
+            body: {
+              payment_id: data.id,
+            },
+          })
+
+          if (!active) return
+
+          if (
+            sync?.status === 'paid'
+          ) {
+            setPaymentStatus('paid')
+
+            setNotice(
+              'Payment confirmed! Your request is now active.',
+            )
+          } else if (
+            sync?.status === 'failed'
+          ) {
+            setPaymentStatus('failed')
+
+            setNotice(
+              'The payment was not completed. You can try again with the phone number below.',
+            )
+          }
+          break
+        }
 
         case 'failed':
         case 'cancelled':

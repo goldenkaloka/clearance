@@ -60,6 +60,79 @@ export default function StudentGown() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile])
 
+  /*
+   * Reconcile a pushed gown payment with ClickPesa.
+   *
+   * ClickPesa does not reliably deliver its webhook, so while
+   * the order is awaiting payment we poll the query API and
+   * mark the payment paid/failed when the provider reports it.
+   */
+  useEffect(() => {
+    if (!order || order.status !== 'ordered') return
+
+    const orderId = order.id
+    let active = true
+    let attempts = 0
+
+    async function check() {
+      const { data: payment } = await supabase
+        .from('payments')
+        .select('id, status')
+        .eq('gown_order_id', orderId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (!active || !payment) return
+
+      if (payment.status === 'paid') {
+        setError(null)
+        setNotice('Gown payment confirmed! We will prepare your gown for pickup.')
+        void load()
+        return
+      }
+      if (payment.status === 'failed' || payment.status === 'cancelled') {
+        setError('The previous payment was not completed. You can try again below.')
+        return
+      }
+
+      const {
+        data: sync,
+      } = await supabase.functions.invoke<{
+        status?: string
+      }>('payment-status', {
+        body: {
+          payment_id: payment.id,
+        },
+      })
+      if (!active) return
+
+      if (sync?.status === 'paid') {
+        setError(null)
+        setNotice('Gown payment confirmed! We will prepare your gown for pickup.')
+        void load()
+      } else if (sync?.status === 'failed') {
+        setError('The payment was not completed. You can try again below.')
+      }
+    }
+
+    void check()
+
+    const interval = window.setInterval(() => {
+      attempts += 1
+      if (attempts > 40) {
+        window.clearInterval(interval)
+        return
+      }
+      void check()
+    }, 5000)
+
+    return () => {
+      active = false
+      window.clearInterval(interval)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order])
+
   useEffect(() => {
     if (profile?.phone && !payPhone) setPayPhone(profile.phone)
   }, [profile?.phone, payPhone])
