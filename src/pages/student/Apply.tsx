@@ -1414,16 +1414,6 @@ export default function StudentApply() {
               </Card>
             )}
 
-          <Card className="bg-slate-50">
-            <p className="text-xs leading-relaxed text-slate-500">
-              What happens next? After
-              payment is confirmed, an
-              agent is assigned and your
-              clearance stages begin.
-              You'll get notified at every
-              step.
-            </p>
-          </Card>
         </div>
       </div>
     </div>
