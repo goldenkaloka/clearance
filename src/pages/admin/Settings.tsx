@@ -77,10 +77,11 @@ export default function AdminSettings() {
         <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
           <Wallet className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-bold text-slate-900">Service fee</h3>
+        <h3 className="text-base font-bold text-slate-900">Clearance fee</h3>
         <p className="mt-1 text-sm text-slate-500">
-          A single amount charged to every student for graduation clearance assistance. Existing requests keep the fee
-          they had when created.
+          A single total charged to every student for graduation clearance. It is the sum of service assistance plus
+          passport photo ({formatTZS(3000)}), library clearance ({formatTZS(1800)}) and application form ({formatTZS(100)}).
+          Students see this full breakdown on the payment form. Existing requests keep the fee they had when created.
         </p>
         <div className="mt-4">
           <Input

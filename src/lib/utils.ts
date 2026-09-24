@@ -26,6 +26,30 @@ export function formatTZS(amount: number | string | null | undefined): string {
   return `TZS ${n.toLocaleString('en-US')}`
 }
 
+export interface FeeLine {
+  label: string
+  amount: number
+}
+
+export const CLEARANCE_FEE_ADDONS: FeeLine[] = [
+  { label: 'Passport photo', amount: 3000 },
+  { label: 'Library clearance', amount: 1800 },
+  { label: 'Application form', amount: 100 },
+]
+
+/*
+ * Itemise the single clearance charge for the payment form.
+ *
+ * The stored fee is the total (19900): service assistance plus the fixed
+ * add-ons above. The service line is derived so the breakdown always adds
+ * up exactly to whatever total the operator is charging.
+ */
+export function clearanceFeeBreakdown(total: number | null | undefined): FeeLine[] {
+  const t = Math.max(0, Math.round(Number(total ?? 0)))
+  const extras = CLEARANCE_FEE_ADDONS.reduce((sum, item) => sum + item.amount, 0)
+  return [{ label: 'Service assistance', amount: Math.max(0, t - extras) }, ...CLEARANCE_FEE_ADDONS]
+}
+
 export const REGALIA_CATEGORIES = ['gown', 'sash', 'suit', 'shoes'] as const
 
 export function regaliaLabel(category: string): string {

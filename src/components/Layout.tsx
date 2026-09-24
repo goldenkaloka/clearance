@@ -4,6 +4,7 @@ import { Bell, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { dashboardFor } from '../lib/utils'
+import { Button, Modal } from './ui'
 
 export function NotificationsBell() {
   const { profile } = useAuth()
@@ -92,6 +93,7 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
 
   const initials = (profile?.full_name || 'U').slice(0, 2).toUpperCase()
 
@@ -187,7 +189,7 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
                     <button
                       onClick={() => {
                         setMenuOpen(false)
-                        void signOut()
+                        setConfirmSignOut(true)
                       }}
                       className="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-600 transition-colors hover:bg-rose-50"
                     >
@@ -293,6 +295,25 @@ export function SiteNav({ mode = 'app', nav = [], left }: { mode?: 'marketing' |
           </div>
         </div>
       )}
+
+      <Modal open={confirmSignOut} onClose={() => setConfirmSignOut(false)} title="Log out?">
+        <p className="text-sm text-brand-500">Are you sure you want to sign out of Finalists?</p>
+        <div className="mt-5 flex gap-3">
+          <Button variant="secondary" className="flex-1" onClick={() => setConfirmSignOut(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            className="flex-1"
+            onClick={() => {
+              setConfirmSignOut(false)
+              void signOut()
+            }}
+          >
+            Log out
+          </Button>
+        </div>
+      </Modal>
     </header>
   )
 }

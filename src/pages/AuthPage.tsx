@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { GraduationCap, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
+import { GraduationCap, Mail, Lock, Phone, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Alert } from '../components/ui'
 import { homeFor } from '../lib/utils'
@@ -194,13 +194,6 @@ export default function AuthPage() {
               )}
             </button>
           </form>
-
-          {mode === 'register' && (
-            <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-brand-400">
-              <Check className="h-3.5 w-3.5 text-gold-600" />
-              No role selection needed — everyone starts as a student.
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -19,7 +19,7 @@ import {
   Spinner,
   SectionHeader,
 } from '../../components/ui'
-import { formatTZS, normalizeTzPhone, isValidTzPhone, friendlyDbError, friendlyPaymentError } from '../../lib/utils'
+import { formatTZS, normalizeTzPhone, isValidTzPhone, friendlyDbError, friendlyPaymentError, clearanceFeeBreakdown } from '../../lib/utils'
 import { useSchools } from '../../hooks/useSchools'
 
 interface ExistingRequest {
@@ -1121,11 +1121,35 @@ export default function StudentApply() {
             <Card>
               <SectionHeader
                 title="Mobile money payment"
-                subtitle={`Pay ${fee ? formatTZS(fee) : ''} securely via M-Pesa, Tigo Pesa or Airtel Money`}
+                subtitle={`Pay ${fee ? formatTZS(fee) : ''} via mobile money`}
               />
-              <div className="mb-4 flex items-center justify-between rounded-xl bg-brand-50 px-4 py-3 text-sm">
-                <span className="flex items-center gap-2 font-medium text-brand-700"><Wallet className="h-4 w-4" /> Service fee</span>
-                <span className="text-lg font-extrabold text-brand-900">{fee ? formatTZS(fee) : '…'}</span>
+
+              {fee !== null && (
+                <div className="mb-4">
+                  <Alert kind="warning">
+                    <span className="font-semibold">M-Pesa payments are not available.</span>{' '}
+                    Enter the phone number below and confirm the mobile-money prompt to complete payment.
+                  </Alert>
+                </div>
+              )}
+
+              <div className="mb-4 rounded-xl bg-brand-50 px-4 py-3 text-sm">
+                <div className="mb-2 flex items-center gap-2 font-medium text-brand-700">
+                  <Wallet className="h-4 w-4" /> Fee breakdown
+                </div>
+                <dl className="space-y-1.5">
+                  {fee !== null &&
+                    clearanceFeeBreakdown(fee).map((line) => (
+                      <div key={line.label} className="flex items-center justify-between gap-3">
+                        <dt className="text-slate-600">{line.label}</dt>
+                        <dd className="font-semibold text-slate-900">{formatTZS(line.amount)}</dd>
+                      </div>
+                    ))}
+                </dl>
+                <div className="mt-2 flex items-center justify-between gap-3 border-t border-brand-100 pt-2">
+                  <span className="font-semibold text-brand-700">Total</span>
+                  <span className="text-lg font-extrabold text-brand-900">{fee ? formatTZS(fee) : '…'}</span>
+                </div>
               </div>
               {fee !== null && (
                 <div className="mb-4">
@@ -1330,7 +1354,7 @@ export default function StudentApply() {
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xs text-brand-500">
-                  Service fee
+                  Total payable
                 </p>
 
                 <p className="text-2xl font-extrabold text-black">
@@ -1342,6 +1366,17 @@ export default function StudentApply() {
                 </p>
               </div>
             </div>
+
+            {fee !== null && (
+              <dl className="mt-3 space-y-1.5 text-xs text-brand-500">
+                {clearanceFeeBreakdown(fee).map((line) => (
+                  <div key={line.label} className="flex items-center justify-between gap-3">
+                    <dt>{line.label}</dt>
+                    <dd className="font-medium text-brand-700">{formatTZS(line.amount)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
 
             <p className="mt-3 text-xs leading-relaxed text-brand-500">
               One-time fee for the
