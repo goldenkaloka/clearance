@@ -85,7 +85,7 @@ function Gate() {
     )
   }
 
-  if (!profile) return <Navigate to="/auth" replace />
+  if (!profile) return <Navigate to="/" replace />
   if (profile.role === 'admin') return <AdminRoutes />
   if (profile.role === 'agent') return <AgentRoutes />
   return <StudentRoutes />

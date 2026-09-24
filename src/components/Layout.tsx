@@ -324,7 +324,7 @@ function Shell({ children, nav }: { children: ReactNode; nav: NavItem[] }) {
   const location = useLocation()
 
   if (!profile) {
-    navigate('/auth', { replace: true })
+    navigate('/', { replace: true })
     return null
   }
 

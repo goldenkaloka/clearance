@@ -16,6 +16,7 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -38,6 +39,11 @@ export default function AuthPage() {
     } else {
       if (password.length < 6) {
         setError('Password must be at least 6 characters.')
+        setLoading(false)
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.')
         setLoading(false)
         return
       }
@@ -178,6 +184,33 @@ export default function AuthPage() {
                 </button>
               </div>
             </label>
+
+            {mode === 'register' && (
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-normal text-brand-800">Confirm password</span>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-brand-300">
+                    <Lock className="h-4 w-4" />
+                  </span>
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="h-12 w-full rounded border border-brand-200 bg-white py-3 pl-11 pr-11 text-sm tracking-[0.025em] outline-none transition focus:border-brand-900 focus:ring-1 focus:ring-brand-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-brand-300 transition hover:text-brand-900"
+                    aria-label={showPass ? 'Hide password' : 'Show password'}
+                  >
+                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </label>
+            )}
 
             <button
               type="submit"
