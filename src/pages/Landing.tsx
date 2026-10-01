@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight, GraduationCap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { SiteNav } from '../components/Layout'
 import { dashboardFor, homeFor } from '../lib/utils'
+import { useSeo } from '../hooks/useSeo'
 import ContactModal from '../components/ContactModal'
 
 const CATEGORIES = [
@@ -15,6 +16,12 @@ const CATEGORIES = [
 ]
 
 export default function Landing() {
+  useSeo({
+    title: 'Finalists — Graduation Clearance & Regalia in Tanzania',
+    description:
+      'Finalists helps Ardhi University finalists complete graduation clearance with tracked assistance, plus graduation gowns, suits, sashes and shoes.',
+    path: '/',
+  })
   const { profile } = useAuth()
   const navigate = useNavigate()
   const [contactOpen, setContactOpen] = useState(false)

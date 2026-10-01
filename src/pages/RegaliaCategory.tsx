@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ContactModal from '../components/ContactModal'
 import { SiteNav } from '../components/Layout'
+import { useSeo } from '../hooks/useSeo'
 import type { RegaliaCategory, RegaliaItem } from '../lib/types'
 
 const VALID: RegaliaCategory[] = ['gown', 'sash', 'suit', 'shoes']
@@ -29,6 +30,12 @@ export default function RegaliaCategoryPage() {
   const [items, setItems] = useState<RegaliaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [contact, setContact] = useState<{ open: boolean; item?: RegaliaItem }>({ open: false })
+
+  useSeo({
+    title: `${TITLES[cat]} | Finalists`,
+    description: DESC[cat],
+    path: `/regalia/${cat}`,
+  })
 
   useEffect(() => {
     setLoading(true)

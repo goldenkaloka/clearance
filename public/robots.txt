@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /agent/
+Disallow: /student/
+Disallow: /notifications
+
+Sitemap: https://clearance.mwanachuoshop.com/sitemap.xml

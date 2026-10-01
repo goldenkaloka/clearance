@@ -4,8 +4,14 @@ import { GraduationCap, Mail, Lock, Phone, Eye, EyeOff, ArrowRight } from 'lucid
 import { useAuth } from '../context/AuthContext'
 import { Alert } from '../components/ui'
 import { homeFor } from '../lib/utils'
+import { useSeo } from '../hooks/useSeo'
 
 export default function AuthPage() {
+  useSeo({
+    title: 'Sign in | Finalists',
+    description: 'Sign in or create your Finalists student account to start your graduation clearance.',
+    path: '/auth',
+  })
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
