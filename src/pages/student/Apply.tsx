@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Info,
@@ -6,6 +6,10 @@ import {
   Wallet,
   FileText,
   RefreshCw,
+  AlertTriangle,
+  Loader2,
+  ListChecks,
+  Smartphone,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -15,7 +19,6 @@ import {
   Input,
   Select,
   Card,
-  Alert,
   Spinner,
   SectionHeader,
 } from '../../components/ui'
@@ -43,6 +46,101 @@ type PaymentStatus =
   | 'pending'
   | 'paid'
   | 'failed'
+
+/*
+ * Unified status feed: every message, warning and notice on this page
+ * renders through FeedItem so feedback is always visible, consistently
+ * styled, and slides in with an animation. Parent components pass a `key`
+ * so each new message replays the entry animation.
+ */
+type FeedKind = 'info' | 'warning' | 'error' | 'success'
+
+const FEED_STYLES: Record<FeedKind, string> = {
+  info: 'border-sky-200 bg-sky-50 text-sky-900',
+  warning: 'border-amber-200 bg-amber-50 text-amber-900',
+  error: 'border-rose-200 bg-rose-50 text-rose-900',
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
+}
+
+const FEED_ICONS = {
+  info: Info,
+  warning: AlertTriangle,
+  error: AlertTriangle,
+  success: CheckCircle2,
+}
+
+function FeedItem({ kind, children }: { kind: FeedKind; children: ReactNode }) {
+  const Icon = FEED_ICONS[kind]
+  return (
+    <div className={`msg-in flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm leading-relaxed ${FEED_STYLES[kind]}`}>
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <div className="flex-1">{children}</div>
+    </div>
+  )
+}
+
+function StatusPill({ status }: { status: PaymentStatus }) {
+  if (status === 'paid') {
+    return (
+      <span className="pop-in inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+        <CheckCircle2 className="h-3.5 w-3.5" /> Paid
+      </span>
+    )
+  }
+  if (status === 'failed') {
+    return (
+      <span className="pop-in inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
+        <AlertTriangle className="h-3.5 w-3.5" /> Failed
+      </span>
+    )
+  }
+  if (status === 'pending') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+        <span className="relative flex h-2 w-2">
+          <span className="dot-ping absolute inline-flex h-full w-full rounded-full bg-amber-500" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+        </span>
+        Waiting for confirmation
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+      Ready to pay
+    </span>
+  )
+}
+
+function WaitingBar() {
+  return (
+    <div className="msg-in overflow-hidden rounded-xl border border-brand-200 bg-white">
+      <div className="flex items-center gap-2.5 px-3.5 pt-3 text-sm text-brand-800">
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-gold-600" />
+        <p>Confirm the prompt on your phone — we check for confirmation automatically.</p>
+      </div>
+      <div className="px-3.5 pb-3 pt-2">
+        <div className="h-1.5 overflow-hidden rounded-full bg-brand-100">
+          <div className="shimmer-bar h-full w-2/5 rounded-full bg-gold-500" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SuccessCheck() {
+  return (
+    <span className="relative mx-auto flex h-20 w-20 items-center justify-center">
+      <span className="ring-expand absolute inset-0 rounded-full bg-emerald-200" />
+      <span className="ring-expand-delay absolute inset-0 rounded-full bg-emerald-200" />
+      <span className="pop-in relative flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500">
+        <svg viewBox="0 0 24 24" className="h-8 w-8 text-white" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          <path className="check-draw" d="M4 12.5l5 5L20 6.5" />
+        </svg>
+      </span>
+    </span>
+  )
+}
 
 export default function StudentApply() {
   const { profile, refreshProfile } = useAuth()
@@ -95,6 +193,12 @@ export default function StudentApply() {
     useState<string | null>(null)
 
   const [loading, setLoading] = useState(false)
+
+  /*
+   * Dedicated Pay-button state: tapping Pay must never freeze the
+   * rest of the page. `loading` stays for the form/sandbox actions.
+   */
+  const [paying, setPaying] = useState(false)
 
   const [sandboxMode, setSandboxMode] =
     useState(false)
@@ -256,10 +360,6 @@ export default function StudentApply() {
              * button remains enabled.
              */
             setPaymentStatus('pending')
-
-            setNotice(
-              'A payment request already exists. You can wait for it or enter a phone number and send a new payment prompt.',
-            )
           } else if (
             payment?.status ===
               'failed' ||
@@ -302,7 +402,20 @@ export default function StudentApply() {
       return
     }
 
+    /*
+     * Terminal states freeze everything: no more polling, no more
+     * motion. A fresh tap on Pay flips back to pending and restarts
+     * the loop below via the paymentStatus dependency.
+     */
+    if (
+      paymentStatus === 'paid' ||
+      paymentStatus === 'failed'
+    ) {
+      return
+    }
+
     let active = true
+    let attempts = 0
 
     async function checkPaymentStatus() {
       const {
@@ -410,6 +523,22 @@ export default function StudentApply() {
 
     const interval =
       window.setInterval(() => {
+        attempts += 1
+        /*
+         * ~2 minutes with no confirmation: the USSD prompt has
+         * expired on the phone. Stop polling and settle the UI
+         * into failed (local state only — the DB row is untouched,
+         * so a late webhook success still lands correctly).
+         */
+        if (attempts >= 40) {
+          window.clearInterval(interval)
+          if (!active) return
+          setPaymentStatus('failed')
+          setNotice(
+            'No confirmation received — the prompt likely expired. Send a new payment prompt to try again.',
+          )
+          return
+        }
         void checkPaymentStatus()
       }, 3000)
 
@@ -419,7 +548,7 @@ export default function StudentApply() {
         interval,
       )
     }
-  }, [requestId, stage])
+  }, [requestId, stage, paymentStatus])
 
   if (checkingRequest) {
     return <Spinner />
@@ -639,14 +768,20 @@ export default function StudentApply() {
     }
 
     setError(null)
-    setNotice(null)
 
     /*
-     * loading controls the button.
+     * Instant feedback: the initiate call can take several seconds
+     * (ClickPesa round-trips), so say something immediately instead
+     * of leaving a dead page. Replaced by the real result below.
+     */
+    setNotice(`Sending payment prompt to ${rawPhone}…`)
+
+    /*
+     * paying controls only the Pay button.
      *
      * paymentStatus does NOT disable it.
      */
-    setLoading(true)
+    setPaying(true)
 
     try {
       const {
@@ -722,7 +857,7 @@ export default function StudentApply() {
       setError(msg)
       toast.error(msg)
     } finally {
-      setLoading(false)
+      setPaying(false)
     }
   }
 
@@ -858,6 +993,15 @@ export default function StudentApply() {
                 index === 0 &&
                 stage === 'pay'
 
+              /*
+               * Terminal payment states (paid / failed) freeze all
+               * looping animations: nothing left to wait for, so the
+               * step indicator stays highlighted but stops glowing.
+               */
+              const settled =
+                paymentStatus === 'paid' ||
+                paymentStatus === 'failed'
+
               return (
                 <div
                   key={step}
@@ -865,11 +1009,11 @@ export default function StudentApply() {
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${
                         done
                           ? 'bg-emerald-500 text-white'
                           : current
-                            ? 'bg-brand-600 text-white'
+                            ? `bg-brand-600 text-white${settled ? '' : ' step-current'}`
                             : 'bg-slate-100 text-slate-400'
                       }`}
                     >
@@ -916,29 +1060,27 @@ export default function StudentApply() {
           {stage ===
           'form' ? (
             <Card>
-              <div className="mb-4 flex items-start gap-2 rounded-xl bg-brand-50 p-3 text-xs leading-relaxed text-brand-800">
-                <Info className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="mb-4 space-y-2.5">
+                <FeedItem key="private-service" kind="info">
+                  <p>
+                    This is a{' '}
+                    <b>
+                      private assistance service
+                    </b>
+                    . We are not affiliated
+                    with Ardhi University,
+                    and final clearance
+                    approval rests with the
+                    university offices.
+                  </p>
+                </FeedItem>
 
-                <p>
-                  This is a{' '}
-                  <b>
-                    private assistance service
-                  </b>
-                  . We are not affiliated
-                  with Ardhi University,
-                  and final clearance
-                  approval rests with the
-                  university offices.
-                </p>
-              </div>
-
-              {error && (
-                <div className="mb-4">
-                  <Alert kind="error">
+                {error && (
+                  <FeedItem key={error} kind="error">
                     {error}
-                  </Alert>
-                </div>
-              )}
+                  </FeedItem>
+                )}
+              </div>
 
               <SectionHeader
                 title="Student details"
@@ -1101,7 +1243,6 @@ export default function StudentApply() {
                       }} />
                     </label>
                   )}
-                  <p className="mt-1 text-xs text-brand-400">Required — agent will download and attach to physical form</p>
                 </div>
 
                 <Button
@@ -1119,17 +1260,20 @@ export default function StudentApply() {
           ) : (
             /* PAYMENT */
             <Card>
-              <SectionHeader
-                title="Mobile money payment"
-                subtitle={`Pay ${fee ? formatTZS(fee) : ''} via mobile money`}
-              />
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <SectionHeader
+                    title="Mobile money payment"
+                    subtitle={`Pay ${fee ? formatTZS(fee) : ''} via mobile money`}
+                  />
+                </div>
+                <StatusPill status={paymentStatus} />
+              </div>
 
-              {fee !== null && (
-                <div className="mb-4">
-                  <Alert kind="warning">
-                    <span className="font-semibold">M-Pesa payments are not available.</span>{' '}
-                    Enter the phone number below and confirm the mobile-money prompt to complete payment.
-                  </Alert>
+              {requestNumber && (
+                <div className="msg-in mb-4 flex items-center justify-between gap-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm">
+                  <span className="text-brand-500">Your request</span>
+                  <span className="font-mono font-bold text-brand-900">{requestNumber}</span>
                 </div>
               )}
 
@@ -1151,44 +1295,57 @@ export default function StudentApply() {
                   <span className="text-lg font-extrabold text-brand-900">{fee ? formatTZS(fee) : '…'}</span>
                 </div>
               </div>
-              {fee !== null && (
-                <div className="mb-4">
-                  <Alert kind="warning">
-                    Make sure you have at least {formatTZS(fee + 2500)} in your wallet — your network adds its own service and government charges on top of the {formatTZS(fee)} fee.
-                  </Alert>
+              <div className="mb-4 overflow-hidden rounded-xl border border-brand-100">
+                <div className="flex items-center gap-2 border-b border-brand-100 bg-brand-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-brand-500">
+                  <ListChecks className="h-4 w-4" /> Before you pay
                 </div>
-              )}
+                <ul className="space-y-2.5 px-4 py-3 text-sm leading-relaxed text-slate-600">
+                  <li className="flex items-start gap-2 rounded-lg bg-rose-50 px-2.5 py-2 text-rose-800">
+                    <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                    <span>
+                      <b>M-Pesa is not available.</b>
+                    </span>
+                  </li>
+                  {fee !== null && (
+                    <li className="flex items-start gap-2">
+                      <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
+                      <span>
+                        hakikisha una kiasi kisichopungua <b className="text-yellow-800 ">{formatTZS(fee + 1500)}</b> kwa ajili ya makato.
+                      </span>
+                    </li>
+                  )}
+                </ul>
+              </div>
 
               {error && (
-                <div className="mb-4">
-                  <Alert kind="error">
+                <div className="mb-4 space-y-2.5">
+                  <FeedItem key={error} kind="error">
                     {error}
-                  </Alert>
+                  </FeedItem>
                 </div>
               )}
 
-              {notice && (
-                <div className="mb-4">
-                  <Alert
-                    kind={
-                      paymentStatus ===
-                      'paid'
-                        ? 'success'
-                        : 'info'
-                    }
-                  >
+              {notice && paymentStatus !== 'paid' && (
+                <div className="mb-4 space-y-2.5">
+                  <FeedItem key={notice} kind={paymentStatus === 'failed' ? 'error' : 'info'}>
                     {notice}
-                  </Alert>
+                  </FeedItem>
+                </div>
+              )}
+
+              {paymentStatus === 'pending' && (
+                <div className="mb-4">
+                  <WaitingBar />
                 </div>
               )}
 
               {/* SUCCESS */}
               {paymentStatus ===
               'paid' ? (
-                <div className="rounded-xl bg-emerald-50 p-4 text-center">
-                  <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-500" />
+                <div className="pop-in rounded-2xl bg-emerald-50 p-6 text-center">
+                  <SuccessCheck />
 
-                  <h3 className="mt-2 font-bold text-emerald-900">
+                  <h3 className="mt-3 font-bold text-emerald-900">
                     Payment successful
                   </h3>
 
@@ -1248,7 +1405,7 @@ export default function StudentApply() {
 
                     <p className="mt-1 text-xs text-slate-400">
                       Enter the number that should
-                      receive the mobile-money prompt.
+                      receive the USSD prompt.
                     </p>
                   </div>
 
@@ -1269,7 +1426,7 @@ export default function StudentApply() {
                       void pay()
                     }
                     loading={
-                      loading
+                      paying
                     }
                     variant="success"
                     className="w-full sm:w-auto"
@@ -1288,20 +1445,14 @@ export default function StudentApply() {
 
                   {paymentStatus ===
                     'pending' && (
-                    <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
-                      <RefreshCw className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div className="msg-in flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+                      <RefreshCw className="h-4 w-4 shrink-0 animate-spin" />
 
                       <p>
-                        A payment
-                        request is
-                        currently
-                        pending. If
-                        you did not
-                        receive the
-                        prompt, verify
-                        the phone
-                        number above
-                        and tap
+                        No prompt yet?
+                        Verify the
+                        number above,
+                        then tap
                         <b>
                           {' '}
                           Send payment
@@ -1331,7 +1482,7 @@ export default function StudentApply() {
                   <p className="text-xs text-slate-400">
                     {paymentStatus ===
                     'pending'
-                      ? 'Complete the mobile-money prompt on your phone. This page will automatically check for payment confirmation.'
+                      ? 'USSD prompt is send in your mobile number'
                       : 'You will receive a mobile-money prompt on the number above. Confirm it with your mobile-money PIN.'}
                   </p>
                 </div>
@@ -1384,35 +1535,6 @@ export default function StudentApply() {
               paid once by mobile money.
             </p>
           </Card>
-
-          {stage === 'pay' &&
-            requestNumber && (
-              <Card>
-                <p className="text-xs text-slate-400">
-                  Your request
-                </p>
-
-                <p className="font-mono text-lg font-bold text-slate-900">
-                  {
-                    requestNumber
-                  }
-                </p>
-
-                <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 text-sm">
-                  <span className="text-slate-500">
-                    Service fee
-                  </span>
-
-                  <span className="font-bold text-slate-900">
-                    {fee
-                      ? formatTZS(
-                          fee,
-                        )
-                      : '…'}
-                  </span>
-                </div>
-              </Card>
-            )}
 
         </div>
       </div>

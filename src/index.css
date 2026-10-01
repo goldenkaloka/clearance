@@ -95,6 +95,68 @@ body {
   animation: page-in 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
+/* ---- Apply page feedback animations ---- */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.msg-in {
+  animation: msg-in 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.86); }
+  60% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.pop-in {
+  animation: pop-in 0.45s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+@keyframes draw-check {
+  to { stroke-dashoffset: 0; }
+}
+.check-draw {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: draw-check 0.5s 0.3s ease-out forwards;
+}
+
+@keyframes ring-expand {
+  0% { opacity: 0.7; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+.ring-expand {
+  animation: ring-expand 1.6s ease-out infinite;
+}
+.ring-expand-delay {
+  animation: ring-expand 1.6s 0.5s ease-out infinite;
+}
+
+@keyframes dot-ping {
+  0% { transform: scale(1); opacity: 0.9; }
+  80%, 100% { transform: scale(2.4); opacity: 0; }
+}
+.dot-ping {
+  animation: dot-ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes shimmer-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+.shimmer-bar {
+  animation: shimmer-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes step-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.18); }
+  50% { box-shadow: 0 0 0 5px rgba(0, 0, 0, 0); }
+}
+.step-current {
+  animation: step-glow 1.8s ease-in-out infinite;
+}
+
 @media (min-width: 1024px) {
   .app-container {
     max-width: 80rem;

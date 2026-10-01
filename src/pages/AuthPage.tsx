@@ -117,10 +117,6 @@ export default function AuthPage() {
                     />
                   </div>
                 </label>
-
-                <div className="rounded border border-brand-100 bg-brand-50 px-3.5 py-2.5 text-xs leading-relaxed text-brand-500">
-                  New accounts are created as students. Staff accounts are activated by an administrator.
-                </div>
               </>
             )}
 
